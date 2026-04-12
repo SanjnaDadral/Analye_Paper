@@ -9,9 +9,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-change-in-production-12345')
 
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = False
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv('*')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -167,4 +167,4 @@ LOGOUT_REDIRECT_URL = '/'
 AUTHENTICATION_BACKENDS = ['analyzer.backends.EmailOrUsernameModelBackend']
 
 # Simple password requirements
-AUTH_PASSWORD_VALIDATORS = []
+# AUTH_PASSWORD_VALIDATORS = []
