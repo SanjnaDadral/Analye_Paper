@@ -1,0 +1,206 @@
+{% extends 'analyzer/base.html' %} {% load static %} {% block title %}Verify OTP
+- PaperAIzer{% endblock %} {% block content %}
+<div
+  class="container"
+  style="
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+  "
+>
+  <div
+    class="card"
+    style="
+      width: 100%;
+      max-width: 450px;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    "
+  >
+    <div class="card-body p-5">
+      <div style="text-align: center; margin-bottom: 2rem">
+        <div
+          style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(
+              135deg,
+              var(--primary),
+              var(--secondary)
+            );
+            border-radius: 50%;
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+          "
+        >
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h1 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem">
+          Verify OTP
+        </h1>
+        <p style="color: var(--text-secondary)">
+          Enter the 6-digit code sent to your email
+        </p>
+        <p
+          style="
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+          "
+        >
+          <strong>{{ email }}</strong>
+        </p>
+      </div>
+
+      {% if messages %} {% for message in messages %} {% if message.tags == 'success' %}
+      <div
+        class="alert alert-success"
+        style="border-radius: 10px; margin-bottom: 1.5rem"
+      >
+        <i class="fas fa-check-circle me-2"></i>{{ message }}
+      </div>
+      {% else %}
+      <div
+        class="alert alert-danger"
+        style="border-radius: 10px; margin-bottom: 1.5rem"
+      >
+        <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+      </div>
+      {% endif %} 
+      {% endfor %} 
+      {% endif %}
+
+      <form method="post" style="margin-bottom: 2rem">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label
+            for="otp"
+            class="form-label"
+            style="font-weight: 600; margin-bottom: 0.5rem"
+            >One-Time Password (OTP)</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="otp"
+            name="otp"
+            placeholder="000000"
+            maxlength="6"
+            inputmode="numeric"
+            pattern="[0-9]{6}"
+            required
+            style="
+              padding: 0.75rem 1rem;
+              border: 1px solid var(--border-color);
+              border-radius: 8px;
+              background: var(--bg-secondary);
+              font-size: 1.5rem;
+              letter-spacing: 0.5rem;
+              text-align: center;
+              font-weight: 600;
+            "
+          />
+        </div>
+
+        <div
+          style="
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+          "
+        >
+          <i class="fas fa-info-circle me-1"></i>OTP expires in 10 minutes
+        </div>
+
+        <button
+          type="submit"
+          class="btn-primary-custom"
+          style="width: 100%; margin-bottom: 1rem"
+        >
+          <i class="fas fa-check me-2"></i>Verify OTP
+        </button>
+      </form>
+
+      <div
+        style="
+          text-align: center;
+          border-top: 1px solid var(--border-color);
+          padding-top: 1.5rem;
+        "
+      >
+        <p style="margin-bottom: 0.5rem; color: var(--text-secondary)">
+          Didn't receive the OTP?
+        </p>
+        <p style="margin-bottom: 0; color: var(--text-secondary)">
+          <a
+            href="{% url 'forgot_password' %}"
+            style="
+              color: var(--primary);
+              text-decoration: none;
+              font-weight: 600;
+            "
+            >Try again</a
+          >
+          or
+          <a
+            href="{% url 'login' %}"
+            style="
+              color: var(--primary);
+              text-decoration: none;
+              font-weight: 600;
+            "
+            >Back to Login</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .alert {
+    padding: 1rem;
+    border: none;
+    border-radius: 10px;
+  }
+
+  .alert-success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  /* OTP input styling */
+  #otp {
+    font-kerning: auto;
+    -webkit-text-security: disc;
+  }
+
+  #otp:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+</style>
+
+<script>
+  // Auto-focus first digit and only allow numbers
+  document.getElementById("otp").addEventListener("input", function (e) {
+    let value = e.target.value.replace(/[^0-9]/g, "");
+    if (value.length > 6) {
+      value = value.slice(0, 6);
+    }
+    e.target.value = value;
+  });
+</script>
+{% endblock %}

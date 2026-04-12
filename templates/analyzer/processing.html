@@ -1,0 +1,61 @@
+{% extends 'analyzer/base.html' %}
+{% load static %}
+{% block title %}Processing - PaperAIzer{% endblock %}
+
+{% block content %}
+<div class="processing-page">
+  <div class="processing-animation">
+    <div class="processing-circle"></div>
+    <div class="processing-circle"></div>
+    <div class="processing-circle"></div>
+    <div class="processing-icon">
+      <i class="fas fa-brain"></i>
+    </div>
+  </div>
+  
+  <h1 class="processing-title">Analyzing Your Paper</h1>
+  <p class="processing-subtitle">Our AI is extracting insights from your document...</p>
+  
+  <div class="loading-steps" style="max-width: 400px;">
+    <div class="loading-step active" id="step1">
+      <i class="fas fa-file-import"></i> Extracting content from document
+    </div>
+    <div class="loading-step" id="step2">
+      <i class="fas fa-brain"></i> Running AI analysis
+    </div>
+    <div class="loading-step" id="step3">
+      <i class="fas fa-search"></i> Checking for plagiarism
+    </div>
+    <div class="loading-step" id="step4">
+      <i class="fas fa-check-circle"></i> Generating your report
+    </div>
+  </div>
+  
+  <div style="margin-top: 3rem; color: var(--text-muted); font-size: 0.9rem;">
+    <i class="fas fa-info-circle"></i> This may take a few moments depending on document size
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  let step = 1;
+  const stepInterval = setInterval(() => {
+    const currentStep = document.getElementById("step" + step);
+    if (currentStep) {
+      currentStep.classList.remove("active");
+      currentStep.classList.add("completed");
+      currentStep.innerHTML = currentStep.innerHTML.replace('fa-', 'fa-check ');
+    }
+    step++;
+    if (step <= 4) {
+      const nextStep = document.getElementById("step" + step);
+      if (nextStep) {
+        nextStep.classList.add("active");
+        nextStep.innerHTML = nextStep.innerHTML.replace('fa-check ', 'fa-');
+      }
+    }
+    if (step > 4) clearInterval(stepInterval);
+  }, 2000);
+});
+</script>
+{% endblock %}

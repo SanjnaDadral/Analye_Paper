@@ -1,0 +1,489 @@
+{% extends 'analyzer/base.html' %}
+{% load static humanize %}
+{% block title %}Dashboard - PaperAIzer{% endblock %}
+{% block extra_css %}
+<style>
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  }
+
+  .dashboard-wrapper {
+    background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent),
+                radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.05), transparent);
+    min-height: calc(100vh - 70px);
+    padding-top: 1rem;
+  }
+
+  .dashboard-header {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+    color: white;
+    padding: 2.5rem;
+    border-radius: 24px;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(99, 102, 241, 0.2);
+  }
+
+  .dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    filter: blur(50px);
+  }
+
+  .welcome-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 800;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transform: rotate(-5deg);
+    transition: transform 0.3s;
+  }
+
+  .welcome-avatar:hover {
+    transform: rotate(0deg) scale(1.05);
+  }
+
+  .stat-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    text-align: left;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: var(--glass-shadow);
+    height: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+
+  .stat-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    font-size: 1.5rem;
+    transition: transform 0.3s;
+  }
+
+  .stat-card:hover .stat-icon {
+    transform: scale(1.1);
+  }
+
+  .stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .section-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--glass-shadow);
+  }
+
+  .section-title {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-title i {
+    width: 32px;
+    height: 32px;
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+
+  .recent-item {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 16px;
+    transition: all 0.2s;
+    margin-bottom: 0.75rem;
+  }
+
+  .recent-item:hover {
+    background: white;
+    transform: translateX(5px);
+    border-color: rgba(99, 102, 241, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  }
+
+  .recent-item-info h6 {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.35rem;
+    font-size: 0.95rem;
+  }
+
+  .recent-item-info small {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .input-type-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .input-type-badge.pdf { background: #fee2e2; color: #ef4444; }
+  .input-type-badge.text { background: #e0e7ff; color: #6366f1; }
+  .input-type-badge.url { background: #dcfce7; color: #10b981; }
+
+  .keyword-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    color: #475569;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .keyword-tag:hover {
+    background: #6366f1;
+    color: white;
+    transform: scale(1.05);
+  }
+
+  .keyword-tag .count {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    padding: 0.1rem 0.4rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+  }
+  
+  .keyword-tag:hover .count {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+
+  .quick-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    color: #475569;
+    text-decoration: none;
+    transition: all 0.3s;
+    font-weight: 600;
+  }
+
+  .quick-link-btn:hover {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
+  }
+
+  .quick-link-btn i {
+    font-size: 1.25rem;
+    opacity: 0.8;
+  }
+
+  .quick-stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.85rem 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    transition: all 0.2s;
+  }
+
+  .quick-stat-row:hover {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+  }
+
+  .quick-stat-label {
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .quick-stat-value {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-header { padding: 1.5rem; }
+    .welcome-avatar { width: 60px; height: 60px; font-size: 1.5rem; }
+    .stat-value { font-size: 1.5rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <div class="container pb-5">
+    <!-- Premium Header -->
+    <div class="dashboard-header d-flex justify-content-between align-items-center flex-wrap gap-4">
+      <div class="d-flex align-items-center gap-4">
+        <div class="welcome-avatar">
+          {{ user.username|make_list|first|upper }}
+        </div>
+        <div>
+          <h2 class="mb-1 fw-800">Hello, {{ user.username }}!</h2>
+          <div class="d-flex flex-wrap gap-3 opacity-90 mt-2">
+            <span class="small d-flex align-items-center gap-1">
+              <i class="fas fa-envelope"></i> {{ user.email }}
+            </span>
+            <span class="small d-flex align-items-center gap-1">
+              <i class="fas fa-calendar-check"></i> Member since {{ member_since|date:"M Y" }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{% url 'upload' %}" class="btn btn-light rounded-pill px-4 py-2 fw-700 shadow-sm">
+          <i class="fas fa-wand-magic-sparkles me-2 text-primary"></i>Analyze Paper
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="row g-4 mb-5">
+      <div class="col-6 col-lg-3">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: #6366f1">
+            <i class="fas fa-layer-group"></i>
+          </div>
+          <div class="stat-value">{{ total_papers|default:0 }}</div>
+          <div class="stat-label">Total Papers</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981">
+            <i class="fas fa-percentage"></i>
+          </div>
+          <div class="stat-value">{{ avg_plagiarism|default:0 }}%</div>
+          <div class="stat-label">Avg Similarity</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b">
+            <i class="fas fa-hashtag"></i>
+          </div>
+          <div class="stat-value">{{ unique_keywords|default:0 }}</div>
+          <div class="stat-label">Key Topics</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(236, 72, 153, 0.1); color: #ec4899">
+            <i class="fas fa-calendar-alt"></i>
+          </div>
+          <div class="stat-value">{{ this_month|default:0 }}</div>
+          <div class="stat-label">This Month</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Layout -->
+    <div class="row g-4">
+      <!-- Left Column: Recent Activity -->
+      <div class="col-lg-8">
+        <div class="section-card">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="section-title mb-0">
+              <i class="fas fa-history"></i> Recent Analyses
+            </h5>
+            {% if documents.count > 5 %}
+            <a href="{% url 'library' %}" class="btn btn-sm btn-link text-primary fw-700 text-decoration-none p-0">
+              View All <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+            {% endif %}
+          </div>
+          
+          {% if recent_activity %}
+          <div class="d-flex flex-column">
+            {% for doc in recent_activity|slice:":5" %}
+            <a href="{% url 'result' doc.id %}" class="recent-item">
+              <div class="recent-item-info">
+                <h6>{{ doc.title|truncatechars:65 }}</h6>
+                <small>
+                  <span><i class="far fa-clock"></i> {{ doc.created_at|naturaltime }}</span>
+                  <span><i class="fas fa-font"></i> {{ doc.word_count|default:0|intcomma }} words</span>
+                </small>
+              </div>
+              <div class="d-flex align-items-center gap-3">
+                <span class="input-type-badge {{ doc.input_type }}">
+                  {% if doc.input_type == 'pdf' %}<i class="fas fa-file-pdf me-1"></i>{% endif %}
+                  {% if doc.input_type == 'text' %}<i class="fas fa-align-left me-1"></i>{% endif %}
+                  {% if doc.input_type == 'url' %}<i class="fas fa-link me-1"></i>{% endif %}
+                  {{ doc.input_type }}
+                </span>
+                <i class="fas fa-chevron-right text-muted opacity-50 small"></i>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <div class="mb-3 opacity-20">
+              <i class="fas fa-folder-open fa-4x"></i>
+            </div>
+            <h6 class="text-muted">No papers analyzed yet</h6>
+            <p class="small text-muted mb-4">Start your research journey by uploading your first paper.</p>
+            <a href="{% url 'upload' %}" class="btn btn-primary rounded-pill px-4">Analyze Now</a>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="section-card">
+          <h5 class="section-title">
+            <i class="fas fa-chart-line"></i> Efficiency Over Time
+          </h5>
+          <div class="p-4 text-center bg-white bg-opacity-40 rounded-3 border border-dashed">
+            <p class="text-muted small mb-0">Activity visualization will appear as you analyze more papers.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Sidebar -->
+      <div class="col-lg-4">
+        <!-- Keywords -->
+        <div class="section-card">
+          <h5 class="section-title">
+            <i class="fas fa-tags"></i> Top Insights
+          </h5>
+          {% if top_keywords %}
+          <div class="d-flex flex-wrap gap-2">
+            {% for kw, count in top_keywords %}
+            <span class="keyword-tag">
+              {{ kw|title }}
+              <span class="count">{{ count }}</span>
+            </span>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="bg-white bg-opacity-40 p-3 rounded-3 text-center">
+            <small class="text-muted">Keywords will appear here after analysis</small>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Detailed Stats -->
+        <div class="section-card">
+          <h5 class="section-title">
+            <i class="fas fa-info-circle"></i> Quick Stats
+          </h5>
+          <div class="quick-stat-row">
+            <span class="quick-stat-label"><i class="fas fa-file-word"></i> Total Words</span>
+            <span class="quick-stat-value">{{ total_words|default:0|intcomma }}</span>
+          </div>
+          <div class="quick-stat-row">
+            <span class="quick-stat-label"><i class="fas fa-calculator"></i> Words Avg.</span>
+            <span class="quick-stat-value">{{ avg_words|default:0|intcomma }}</span>
+          </div>
+          <div class="quick-stat-row">
+            <span class="quick-stat-label"><i class="fas fa-check-double text-success"></i> Unique Terms</span>
+            <span class="quick-stat-value">{{ unique_keywords|default:0 }}</span>
+          </div>
+        </div>
+
+        <!-- Action Links -->
+        <div class="section-card">
+          <h5 class="section-title">
+            <i class="fas fa-bolt"></i> Shortcuts
+          </h5>
+          <div class="d-flex flex-column gap-3">
+            <a href="{% url 'library' %}" class="quick-link-btn">
+              <i class="fas fa-book"></i> 
+              <span>My Library</span>
+              <i class="fas fa-arrow-right ms-auto small opacity-50"></i>
+            </a>
+            <a href="{% url 'compare' %}" class="quick-link-btn">
+              <i class="fas fa-balance-scale"></i> 
+              <span>Compare Papers</span>
+              <i class="fas fa-arrow-right ms-auto small opacity-50"></i>
+            </a>
+            <a href="{% url 'upload' %}" class="quick-link-btn">
+              <i class="fas fa-plus-circle"></i> 
+              <span>New Analysis</span>
+              <i class="fas fa-arrow-right ms-auto small opacity-50"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

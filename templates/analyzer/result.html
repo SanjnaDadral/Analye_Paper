@@ -1,0 +1,1012 @@
+{% extends 'analyzer/base.html' %}
+{% load static %}
+{% block title %}{{ document.title|truncatechars:40 }} - PaperAIzer{% endblock %}
+{% block extra_css %}
+<style>
+  .result-header {
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+  }
+
+  .result-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+  }
+
+  @media (max-width: 768px) {
+    .result-title {
+      font-size: 1.4rem;
+    }
+  }
+
+  .result-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .result-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .section-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-title i {
+    color: #ec4899;
+    width: 24px;
+  }
+
+  .keyword-badge {
+    background: #f0f4ff;
+    color: #6366f1;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0.25rem;
+    display: inline-block;
+    border: 1px solid #e2e8f0;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .stat-item {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ec4899;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+  }
+
+  .plagiarism-bar {
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 1rem 0;
+  }
+
+  .plagiarism-section.low {
+    background: #f0fdf4;
+  }
+
+  .plagiarism-section.medium {
+    background: #fefce8;
+  }
+
+  .plagiarism-section.high {
+    background: #fef2f2;
+  }
+
+  .plagiarism-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 1s ease;
+  }
+
+  .plagiarism-fill.low {
+    background: linear-gradient(90deg, #10b981, #34d399);
+  }
+
+  .plagiarism-fill.medium {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  }
+
+  .plagiarism-fill.high {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+  }
+
+  .extracted-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .extracted-image-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .extracted-image-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+    border-color: #6366f1;
+  }
+
+  .extracted-image-card img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    filter: brightness(1.15) contrast(0.95);
+  }
+
+  .extracted-image-card .image-info {
+    padding: 0.75rem;
+    background: #ffffff;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #94a3b8;
+  }
+
+  .reference-list {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .reference-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.85rem;
+    color: #475569;
+  }
+
+  .reference-item:last-child {
+    border-bottom: none;
+  }
+
+  .link-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .link-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .link-list li:last-child {
+    border-bottom: none;
+  }
+
+  .link-list a {
+    color: #6366f1;
+    text-decoration: none;
+    word-break: break-all;
+  }
+
+  .link-list a:hover {
+    color: #ec4899;
+    text-decoration: underline;
+  }
+
+  .empty-section {
+    text-align: center;
+    padding: 2rem;
+    color: #94a3b8;
+  }
+
+  .empty-section i {
+    font-size: 2rem;
+    color: #e2e8f0;
+    margin-bottom: 0.5rem;
+  }
+
+  .feedback-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .feedback-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .feedback-rating {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .feedback-rating button {
+    background: none;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .feedback-rating button:hover {
+    border-color: #6366f1;
+    background: #f0f4ff;
+  }
+
+  .feedback-rating button.selected {
+    border-color: #6366f1;
+    background: #6366f1;
+    color: white;
+  }
+
+  .feedback-rating button i {
+    font-size: 1.25rem;
+  }
+
+  .feedback-textarea {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .feedback-textarea:focus {
+    outline: none;
+    border-color: #6366f1;
+  }
+
+  .feedback-success {
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+
+  @media print {
+
+    .result-actions,
+    .navbar,
+    .footer {
+      display: none !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb" style="background: transparent">
+      <li class="breadcrumb-item">
+        <a href="{% url 'home' %}" style="color: #6366f1; text-decoration: none">Home</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'library' %}" style="color: #6366f1; text-decoration: none">Library</a>
+      </li>
+      <li class="breadcrumb-item active" style="color: #94a3b8">Result</li>
+    </ol>
+  </nav>
+
+  <div class="result-header">
+    <h1 class="result-title">{{ document.title|truncatechars:80 }}</h1>
+    <div class="result-meta">
+      <span><i
+          class="fas fa-{% if document.input_type == 'pdf' %}file-pdf{% elif document.input_type == 'text' %}file-alt{% else %}globe{% endif %}"></i>
+        {{ document.get_input_type_display }}</span>
+      <span><i class="fas fa-calendar"></i> {{ document.created_at|date:"F d, Y"
+        }}</span>
+      {% if analysis.publication_year %}<span><i class="fas fa-calendar-alt"></i> {{ analysis.publication_year
+        }}</span>{% endif %}
+      {% if analysis.word_count %}<span><i class="fas fa-font"></i> {{ analysis.word_count }} words</span>{% endif %}
+    </div>
+    <div class="result-actions">
+      {% if analysis.model_used %}<span class="badge bg-info me-2" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">
+        <i class="fas fa-brain me-1"></i>{{ analysis.model_used }}
+      </span>{% endif %}
+      <button class="btn btn-light" onclick="exportDoc('pdf')">
+        <i class="fas fa-file-pdf me-2"></i>PDF
+      </button>
+      <button class="btn btn-light" onclick="exportDoc('txt')">
+        <i class="fas fa-file-alt me-2"></i>TXT
+      </button>
+      <button class="btn btn-light" onclick="openEmailModal()">
+        <i class="fas fa-envelope me-2"></i>Email
+      </button>
+      <button class="btn btn-light" onclick="window.print()">
+        <i class="fas fa-print me-2"></i>Print
+      </button>
+      <a href="{% url 'home' %}" class="btn btn-light"><i class="fas fa-plus me-2"></i>New Analysis</a>
+      <button class="btn btn-danger" data-doc-id="{{ document.id }}" data-doc-title="{{ document.title|escapejs }}" onclick="handleDelete(this)">
+        <i class="fas fa-trash me-2"></i>Delete
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      {% if analysis.abstract %}
+      <div class="section-card">
+        <h5 class="section-title"><i class="fas fa-file-alt"></i> Abstract</h5>
+        <p style="line-height: 1.8">{{ analysis.abstract }}</p>
+      </div>
+      {% else %}
+      <div class="section-card">
+        <h5 class="section-title"><i class="fas fa-file-alt"></i> Abstract</h5>
+        <div class="empty-section">
+          <i class="fas fa-search"></i>
+          <p>No abstract found in this document</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Q&A Section -->
+      <div class="section-card" style="border-top: 4px solid #6366f1; margin-top: 1rem;">
+        <h5 class="section-title"><i class="fas fa-question-circle"></i> Ask Questions About This Paper</h5>
+        <p class="text-muted small mb-3">Ask anything about this paper and get AI-powered answers:</p>
+
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+          <input type="text" id="qaQuestion" class="form-control"
+            placeholder="e.g., What methodology was used? What are the main findings?"
+            style="border: 1px solid #cbd5e1;" />
+          <button type="button" class="btn btn-primary" onclick="askQuestion()" style="white-space: nowrap;">
+            <i class="fas fa-paper-plane me-1"></i>Ask
+          </button>
+        </div>
+
+        <div id="qaLoading" style="display: none; text-align: center; padding: 1rem;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="text-muted small mt-2">Analyzing paper...</p>
+        </div>
+
+        <div id="qaResult" style="display: none;">
+          <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border-left: 3px solid #6366f1;">
+            <div class="small text-muted mb-1" id="qaQuestionShow"></div>
+            <p class="mb-0" style="line-height: 1.7;" id="qaAnswerShow"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- URL/Video Content Details Section -->
+      {% if document.input_type == 'url' or document.url %}
+      <div class="section-card" style="border-left: 4px solid #10b981; background: #f0fdf4;">
+        <h5 class="section-title"><i class="fas fa-info-circle"></i> Content Source Details</h5>
+        {% if document.input_type == 'url' %}
+        <div style="margin-bottom: 1rem;">
+          <label style="font-weight: 600; color: #64748b; font-size: 0.9rem;">📍 Source URL:</label>
+          <div
+            style="padding: 0.75rem 1rem; background: white; border-radius: 8px; border: 1px solid #e2e8f0; word-break: break-all; font-family: monospace; font-size: 0.85rem;">
+            {% if document.url %}
+            <a href="{{ document.url }}" target="_blank" rel="noopener" style="color: #6366f1;">{{ document.url }}</a>
+            {% else %}
+            <span style="color: #94a3b8;">URL information not available</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Video metadata if YouTube -->
+        {% if 'youtube' in document.url or 'youtu.be' in document.url %}
+        <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+          <p style="margin-bottom: 0.75rem; font-style: italic; color: #475569;">
+            <strong>🎥 Analysis Source:</strong> This analysis is based on a YouTube video transcript.<br>
+            The system extracted the video's title, description, and auto-generated subtitles to perform the analysis.
+          </p>
+          <div
+            style="background: #f8fafc; padding: 1rem; border-left: 3px solid #3b82f6; border-radius: 4px; margin-top: 0.75rem;">
+            <span style="color: #64748b; font-size: 0.9rem;">
+              <strong>✓ What was extracted:</strong> Video title, description, subtitle transcript, metadata (duration,
+              uploader, views, likes)
+            </span>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if analysis.summary %}
+      <div class="section-card">
+        <h5 class="section-title"><i class="fas fa-star"></i> Summary</h5>
+        <p style="line-height: 1.8">{{ analysis.summary }}</p>
+      </div>
+      {% endif %}
+      {% with conclusion=analysis.extras.conclusion %}
+      {% if conclusion %}
+      <div class="section-card">
+        <h5 class="section-title">
+          <i class="fas fa-flag-checkered"></i> Conclusion
+        </h5>
+        <p style="line-height: 1.8">{{ conclusion }}</p>
+      </div>
+      {% endif %}
+      {% endwith %}
+      {% if analysis.extras and analysis.extras|length > 0 %}
+      {% with research_gaps=analysis.extras.research_gaps %}
+      {% if research_gaps %}
+      <div class="section-card">
+        <h5 class="section-title">
+          <i class="fas fa-lightbulb"></i> Research Gaps & Future Work
+        </h5>
+        <ul style="padding-left: 1.5rem">
+          {% for gap in research_gaps %}
+          <li style="margin-bottom: 0.5rem">{{ gap }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% endwith %}
+      {% with links=analysis.extracted_links %}
+      {% if links %}
+      <div class="section-card">
+        <h5 class="section-title">
+          <i class="fas fa-link"></i> Extracted Links
+          <span class="badge bg-secondary ms-2">{{ links|length }}</span>
+        </h5>
+        <ul class="link-list">
+          {% for link in links|slice:":15" %}
+          <li>
+            <a href="{{ link }}" target="_blank" rel="noopener">{{ link }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% endwith %}
+      {% with refs=analysis.references %}
+      {% if refs %}
+      <div class="section-card">
+        <h5 class="section-title">
+          <i class="fas fa-book"></i> References
+          <span class="badge bg-secondary ms-2">{{ refs|length }}</span>
+        </h5>
+        <div class="reference-list">
+          {% for ref in refs|slice:":20" %}
+          <div class="reference-item">{{ ref|truncatechars:150 }}</div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      {% endwith %}
+      {% with extracted_images=analysis.extras.extracted_images %}
+      {% if extracted_images %}
+      <div class="section-card">
+        <h5 class="section-title">
+          <i class="fas fa-images"></i> Extracted Images
+          <span class="badge bg-secondary ms-2">{{ extracted_images|length }}</span>
+        </h5>
+        <div class="extracted-image-grid">
+          {% for img in extracted_images %}
+          <div class="extracted-image-card" onclick="window.open('{{ img.url }}', '_blank')">
+            <img src="{{ img.url }}" alt="Page {{ img.page }}" onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f1f5f9%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2212%22>Image</text></svg>'
+              " />
+            <div class="image-info">
+              <i class="fas fa-file-pdf me-1"></i> Page {{ img.page }}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %} {% endwith %} {% endif %}
+
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Quick Compare Section -->
+      <div class="section-card"
+        style="border-top: 4px solid #ec4899; background: linear-gradient(135deg, #fff5f7 0%, #ffffff 100%);">
+        <h5 class="section-title"><i class="fas fa-exchange-alt"></i> Compare & Analyze More</h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#compareText"
+            style="font-size: 0.85rem;">
+            <i class="fas fa-plus me-1"></i>Compare Text
+          </button>
+          <button class="btn btn-sm btn-outline-success" data-bs-toggle="collapse" data-bs-target="#compareUrl"
+            style="font-size: 0.85rem;">
+            <i class="fas fa-plus me-1"></i>Add URL/Video
+          </button>
+        </div>
+
+        <!-- Compare Text Collapse -->
+        <div class="collapse mt-3" id="compareText">
+          <div style="background: white; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <label style="font-weight: 600; font-size: 0.9rem; color: #64748b; display: block; margin-bottom: 0.5rem;">
+              Paste text to compare:
+            </label>
+            <textarea id="compareTextArea" class="form-control" rows="5"
+              placeholder="Paste another paper or document text here..."
+              style="font-size: 0.85rem; border: 1px solid #cbd5e1;"></textarea>
+            <button type="button" class="btn btn-primary btn-sm mt-2 w-100" onclick="compareWithText()"
+              style="font-size: 0.85rem;">
+              <i class="fas fa-check me-1"></i>Compare Text
+            </button>
+          </div>
+        </div>
+
+        <!-- Compare URL Collapse -->
+        <div class="collapse mt-3" id="compareUrl">
+          <div style="background: white; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <label style="font-weight: 600; font-size: 0.9rem; color: #64748b; display: block; margin-bottom: 0.5rem;">
+              Paste URL or YouTube link:
+            </label>
+            <input type="url" id="compareUrlInput" class="form-control"
+              placeholder="https://arxiv.org/abs/... or https://youtu.be/..."
+              style="font-size: 0.85rem; border: 1px solid #cbd5e1; margin-bottom: 0.75rem;" />
+            <button type="button" class="btn btn-success btn-sm w-100" onclick="compareWithUrl()"
+              style="font-size: 0.85rem;">
+              <i class="fas fa-check me-1"></i>Fetch & Compare
+            </button>
+            <small style="color: #94a3b8; display: block; margin-top: 0.5rem;">
+              Supports: arXiv, ResearchGate, YouTube, academic websites
+            </small>
+          </div>
+        </div>
+
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+          <a href="{% url 'home' %}" class="btn btn-sm btn-outline-secondary w-100">
+            <i class="fas fa-upload me-1"></i>New Analysis
+          </a>
+        </div>
+      </div>
+
+      {% if analysis.technologies %}
+      <div class="section-card">
+        <h5 class="section-title">
+          <i class="fas fa-microchip"></i> Technologies & Tools
+        </h5>
+        <div>
+          {% for tech in analysis.technologies %}
+          <span class="keyword-badge" style="
+              background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+              color: #065f46;
+            ">{{ tech }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="section-card">
+        <h5 class="section-title"><i class="fas fa-tags"></i> Keywords</h5>
+        {% if analysis.keywords %}
+        <div>
+          {% for keyword in analysis.keywords %}
+          <span class="keyword-badge">{{ keyword }}</span>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-section">
+          <i class="fas fa-tag"></i>
+          <p>No keywords found</p>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if analysis.methodology %}
+      <div class="section-card">
+        <h5 class="section-title"><i class="fas fa-cogs"></i> Methodology</h5>
+        <div>
+          {% for method in analysis.methodology %}
+          <span class="keyword-badge">{{ method }}</span>
+          {% endfor %}
+        </div>
+        {% with method_summary=analysis.extras.methodology_summary %}
+        {% if method_summary %}
+        <p class="mt-3 mb-0 text-secondary small">
+          {{ method_summary|truncatechars:300 }}
+        </p>
+        {% endif %}
+        {% endwith %}
+      </div>
+      {% endif %}
+      {% with dataset_names=analysis.dataset_names dataset_links=analysis.dataset_links %}
+      {% if dataset_names or dataset_links %}
+      <div class="section-card">
+        <h5 class="section-title"><i class="fas fa-database"></i> Datasets</h5>
+        {% if dataset_names %}
+        <div class="mb-3">
+          {% for name in dataset_names %}
+          <span class="keyword-badge" style="
+              background: linear-gradient(135deg, #fef3c7, #fde68a);
+              color: #92400e;
+            ">{{ name }}</span>
+          {% endfor %}
+        </div>
+        {% endif %} {% if dataset_links %}
+        <ul class="link-list small">
+          {% for link in dataset_links|slice:":5" %}
+          <li>
+            <a href="{{ link }}" target="_blank">{{ link|truncatechars:40 }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endwith %}
+      {% if analysis.extras and analysis.extras|length > 0 %}
+      {% with plagiarism=analysis.extras.plagiarism %}
+      {% if plagiarism %}
+      <div class="section-card" style="background: #d1fae5">
+        <h5 class="section-title">
+          <i class="fas fa-shield-alt"></i> Plagiarism Check
+        </h5>
+        <div class="text-center mb-3">
+          <span class="display-4 fw-bold">{{ plagiarism.similarity_percent|default:"0" }}%</span>
+          <div class="small text-muted">Similarity</div>
+        </div>
+        <div class="plagiarism-bar">
+          {% with similarity=plagiarism.similarity_percent|default:0 %}
+          <div class="plagiarism-fill {% if similarity >= 70 %}high{% elif similarity >= 30 %}medium{% else %}low{% endif %}"
+            data-width="{{ similarity }}"></div>
+          {% endwith %}
+        </div>
+      </div>
+      {% endif %}
+      {% endwith %}
+      {% endif %}
+      {% if analysis.word_count > 0 %}
+      <div class="section-card">
+        <h5 class="section-title">
+          <i class="fas fa-chart-pie"></i> Statistics
+        </h5>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-value">{{ analysis.word_count|default:0 }}</div>
+            <div class="stat-label">Words</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ analysis.unique_words|default:0 }}</div>
+            <div class="stat-label">Unique Words</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">
+              {{ analysis.keywords|length|default:0 }}
+            </div>
+            <div class="stat-label">Keywords</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">
+              {{ analysis.references|length|default:0 }}
+            </div>
+            <div class="stat-label">References</div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% if analysis.extras and analysis.extras|length > 0 %}
+      {% with visual=analysis.extras.visual_assets %}
+      {% if visual and visual.counts %}
+      <div class="section-card">
+        <h5 class="section-title">
+          <i class="fas fa-chart-bar"></i> Visual Elements
+        </h5>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-value">{{ visual.counts.figures|default:0 }}</div>
+            <div class="stat-label">Figures</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ visual.counts.tables|default:0 }}</div>
+            <div class="stat-label">Tables</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ visual.counts.charts|default:0 }}</div>
+            <div class="stat-label">Charts</div>
+          </div>
+        </div>
+      </div>
+      {% endif %} {% endwith %} {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="emailModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-envelope me-2"></i>Email Report
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="emailForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Recipient Email</label>
+            <input type="email" class="form-control" id="emailInput" required placeholder="researcher@university.edu" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Format</label>
+            <select class="form-control" id="emailFormat">
+              <option value="pdf">PDF Document</option>
+              <option value="txt">Text File</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-paper-plane me-2"></i>Send
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function exportDoc(format) {
+    window.location.href =
+      '{% url "export" document.id "placeholder" %}'.replace(
+        "placeholder",
+        format,
+      );
+  }
+
+  function openEmailModal() {
+    var modal = new bootstrap.Modal(document.getElementById("emailModal"));
+    modal.show();
+  }
+
+  document.getElementById("emailForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const email = document.getElementById("emailInput").value;
+    const format = document.getElementById("emailFormat").value;
+
+    fetch('{% url "email_report" document.id %}', {
+      method: "POST",
+      body: new URLSearchParams({ email, export_format: format }),
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          alert("Report sent successfully!");
+          bootstrap.Modal.getInstance(
+            document.getElementById("emailModal"),
+          ).hide();
+        } else {
+          alert("Failed: " + data.error);
+        }
+      });
+  });
+
+  // Helper for delete
+  function handleDelete(btn) {
+    const docId = btn.getAttribute('data-doc-id');
+    const docTitle = btn.getAttribute('data-doc-title');
+    deleteDocument(docId, docTitle, btn);
+  }
+
+  let deleteInProgress = false;
+
+  function deleteDocument(docId, docTitle, btn) {
+    if (deleteInProgress) return;
+
+    if (!confirm('Delete "' + docTitle + '"? This cannot be undone.')) return;
+
+    deleteInProgress = true;
+    const btnEl = btn || document.activeElement;
+    btnEl.disabled = true;
+    btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+    fetch('/delete/' + docId + '/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = '{% url "library" %}';
+        } else {
+          alert(data.error || 'Delete failed');
+          deleteInProgress = false;
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-trash me-2"></i>Delete';
+        }
+      })
+      .catch(err => {
+        alert('Error: ' + err.message);
+        deleteInProgress = false;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-trash me-2"></i>Delete';
+      });
+  }
+
+  // Q&A Functions
+  function askQuestion() {
+    const question = document.getElementById('qaQuestion').value.trim();
+
+    if (!question || question.length < 3) {
+      alert('Please enter a question (at least 3 characters)');
+      return;
+    }
+
+    document.getElementById('qaLoading').style.display = 'block';
+    document.getElementById('qaResult').style.display = 'none';
+
+    fetch("{% url 'ask_question' document.id %}", {
+      method: 'POST',
+      body: JSON.stringify({ question: question }),
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('qaLoading').style.display = 'none';
+
+        if (data.error) {
+          alert('Error: ' + data.error);
+          return;
+        }
+
+        document.getElementById('qaQuestionShow').textContent = 'Q: ' + data.question;
+        document.getElementById('qaAnswerShow').textContent = data.answer;
+        document.getElementById('qaResult').style.display = 'block';
+        document.getElementById('qaQuestion').value = '';
+      })
+      .catch(err => {
+        document.getElementById('qaLoading').style.display = 'none';
+        console.error('Q&A error:', err);
+        alert('Error: ' + err.message);
+      });
+  }
+
+  document.getElementById('qaQuestion').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      askQuestion();
+    }
+  });
+
+  // Compare Functions
+  function compareWithText() {
+    const textContent = document.getElementById('compareTextArea').value.trim();
+
+    if (!textContent || textContent.length < 50) {
+      alert('❌ Text must be at least 50 characters');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('input_type', 'text');
+    formData.append('text_content', textContent);
+
+    fetch('/analyze/', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          alert('✅ Analysis complete! Redirecting...');
+          setTimeout(() => {
+            window.location.href = data.redirect_url;
+          }, 1000);
+        } else {
+          alert('❌ ' + (data.error || 'Analysis failed'));
+        }
+      })
+      .catch(err => {
+        console.error('Compare error:', err);
+        alert('❌ Error: ' + err.message);
+      });
+  }
+
+  function compareWithUrl() {
+    const urlInput = document.getElementById('compareUrlInput').value.trim();
+
+    if (!urlInput) {
+      alert('❌ Please enter a URL');
+      return;
+    }
+
+    if (!urlInput.startsWith('http')) {
+      alert('❌ Please enter a valid URL (starting with http)');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('input_type', 'url');
+    formData.append('url_input', urlInput);
+
+    fetch('/analyze/', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          alert('✅ Analysis complete! Redirecting...');
+          setTimeout(() => {
+            window.location.href = data.redirect_url;
+          }, 1000);
+        } else {
+          alert('❌ ' + (data.error || 'Analysis failed'));
+        }
+      })
+      .catch(err => {
+        console.error('Compare error:', err);
+        alert('❌ Error: ' + err.message);
+      });
+  }
+  // Initialize UI elements
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set plagiarism bar widths without causing linting errors
+    document.querySelectorAll('.plagiarism-fill').forEach(bar => {
+      const width = bar.getAttribute('data-width');
+      if (width) bar.style.width = width + '%';
+    });
+  });
+</script>
+{% endblock %}

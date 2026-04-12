@@ -1,0 +1,591 @@
+{% extends 'analyzer/base.html' %} {% load static %} {% block title %}Compare
+Papers - PaperAIzer{% endblock %} {% block extra_css %}
+<style>
+  .compare-header {
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+  }
+
+  .compare-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .compare-card-header {
+    background: #f8fafc;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .compare-card-body {
+    padding: 1.5rem;
+  }
+
+  .paper-badge {
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    color: #6366f1;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .similarity-meter {
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 1rem 0;
+  }
+
+  .similarity-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1s ease;
+    background: linear-gradient(90deg, #10b981, #34d399);
+  }
+
+  .similarity-fill.moderate {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  }
+
+  .similarity-fill.high {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+  }
+
+  .keyword-badge {
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    color: #6366f1;
+    padding: 0.3rem 0.7rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 0.2rem;
+    display: inline-block;
+  }
+
+  .tech-badge {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    color: #065f46;
+    padding: 0.3rem 0.7rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 0.2rem;
+    display: inline-block;
+  }
+
+  .compare-select {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.75rem;
+    font-size: 0.95rem;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .compare-select:focus {
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(21, 154, 156, 0.1);
+  }
+
+  .btn-compare {
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-weight: 700;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: all 0.3s;
+  }
+
+  .btn-compare:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(21, 154, 156, 0.4);
+  }
+
+  .btn-compare:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 3rem;
+  }
+
+  .comparison-result {
+    display: none;
+  }
+
+  .stat-highlight {
+    background: linear-gradient(135deg, #d4eff320, #b4dfe520);
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  .stat-highlight .value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #6366f1;
+  }
+
+  .compare-card-header #title1,
+  .compare-card-header #title2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-left: auto;
+  }
+
+  .compare-card-header {
+    justify-content: space-between;
+  }
+
+  .common-list,
+  .unique-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .empty-msg {
+    text-align: center;
+    padding: 2rem;
+    color: #9ca3af;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+  <div class="compare-header">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1 class="mb-2">
+          <i class="fas fa-exchange-alt me-2"></i>Compare Papers
+        </h1>
+        <p class="mb-0 opacity-75">
+          Select two papers from your library to compare their content,
+          methodology, and more.
+        </p>
+      </div>
+      <div class="col-md-4 text-end">
+        <a href="{% url 'library' %}" class="btn btn-light"><i class="fas fa-folder-open me-2"></i>View Library</a>
+      </div>
+    </div>
+  </div>
+
+  {% if documents %}
+  <div class="compare-card">
+    <div class="compare-card-header">
+      <i class="fas fa-file-alt" style="color: #6366f1"></i>
+      Select Papers to Compare
+    </div>
+    <div class="compare-card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label fw-bold" for="paper1">Paper 1</label>
+          <select id="paper1" class="compare-select">
+            <option value="">-- Select first paper --</option>
+            {% for doc in documents %}
+            <option value="{{ doc.id }}">
+              {{ doc.title|truncatechars:60 }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-bold" for="paper2">Paper 2</label>
+          <select id="paper2" class="compare-select">
+            <option value="">-- Select second paper --</option>
+            {% for doc in documents %}
+            <option value="{{ doc.id }}">
+              {{ doc.title|truncatechars:60 }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button id="compareBtn" class="btn-compare" disabled>
+            <i class="fas fa-search"></i>
+            <span>Compare Papers</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="compare-card">
+    <div class="compare-card-body">
+      <div class="empty-msg">
+        <i class="fas fa-folder-open fa-3x mb-3"></i>
+        <h4>No Papers Available</h4>
+        <p>Analyze some papers first to enable comparison.</p>
+        <a href="{% url 'home' %}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Analyze Paper</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div id="loadingSpinner" class="loading-spinner">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem"></div>
+    <p class="mt-3">Comparing papers...</p>
+  </div>
+
+  <div id="comparisonResults" class="comparison-result">
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="compare-card h-100">
+          <div class="compare-card-header">
+            <span class="paper-badge">Paper 1</span>
+            <span id="title1" style="flex: 1; margin-left: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+          </div>
+          <div class="compare-card-body">
+            <table class="table table-borderless">
+              <tr>
+                <td class="fw-bold text-muted" style="width: 120px">Authors</td>
+                <td id="author1">-</td>
+              </tr>
+              <tr>
+                <td class="fw-bold text-muted">Year</td>
+                <td id="pubDate1">-</td>
+              </tr>
+              <tr>
+                <td class="fw-bold text-muted">Words</td>
+                <td id="wordCount1">-</td>
+              </tr>
+            </table>
+
+            <h6 class="mt-3">
+              <i class="fas fa-tags me-2 text-primary"></i>Keywords
+            </h6>
+            <div id="keywords1" class="common-list"></div>
+
+            <h6 class="mt-3">
+              <i class="fas fa-cogs me-2 text-success"></i>Methodology
+            </h6>
+            <div id="methods1" class="common-list"></div>
+
+            <h6 class="mt-3">
+              <i class="fas fa-microchip me-2 text-info"></i>Technologies
+            </h6>
+            <div id="tech1" class="common-list"></div>
+
+            <h6 class="mt-3">
+              <i class="fas fa-file-alt me-2 text-secondary"></i>Abstract
+            </h6>
+            <p id="abstract1" class="small text-muted" style="max-height: 150px; overflow-y: auto"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="compare-card h-100">
+          <div class="compare-card-header">
+            <span class="paper-badge">Paper 2</span>
+            <span id="title2" style="flex: 1; margin-left: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+          </div>
+          <div class="compare-card-body">
+            <table class="table table-borderless">
+              <tr>
+                <td class="fw-bold text-muted" style="width: 120px">Authors</td>
+                <td id="author2">-</td>
+              </tr>
+              <tr>
+                <td class="fw-bold text-muted">Year</td>
+                <td id="pubDate2">-</td>
+              </tr>
+              <tr>
+                <td class="fw-bold text-muted">Words</td>
+                <td id="wordCount2">-</td>
+              </tr>
+            </table>
+
+            <h6 class="mt-3">
+              <i class="fas fa-tags me-2 text-primary"></i>Keywords
+            </h6>
+            <div id="keywords2" class="common-list"></div>
+
+            <h6 class="mt-3">
+              <i class="fas fa-cogs me-2 text-success"></i>Methodology
+            </h6>
+            <div id="methods2" class="common-list"></div>
+
+            <h6 class="mt-3">
+              <i class="fas fa-microchip me-2 text-info"></i>Technologies
+            </h6>
+            <div id="tech2" class="common-list"></div>
+
+            <h6 class="mt-3">
+              <i class="fas fa-file-alt me-2 text-secondary"></i>Abstract
+            </h6>
+            <p id="abstract2" class="small text-muted" style="max-height: 150px; overflow-y: auto"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <div class="compare-card-header">
+        <i class="fas fa-chart-pie" style="color: #6366f1"></i>
+        Similarity Analysis
+      </div>
+      <div class="compare-card-body">
+        <div class="row g-4">
+          <div class="col-md-3">
+            <div class="stat-highlight">
+              <div class="value" id="overallSim">0%</div>
+              <div class="text-muted small">Overall Similarity</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-highlight">
+              <div class="value" id="keywordSim">0%</div>
+              <div class="text-muted small">Keyword Overlap</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-highlight">
+              <div class="value" id="methodSim">0%</div>
+              <div class="text-muted small">Method Overlap</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-highlight">
+              <div class="value" id="abstractSim">0%</div>
+              <div class="text-muted small">Technology Overlap</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <h6>
+            <i class="fas fa-check-circle me-2 text-success"></i>Common Elements
+          </h6>
+          <div class="row mt-3">
+            <div class="col-md-4">
+              <div class="p-3 bg-light rounded">
+                <strong>Common Keywords</strong>
+                <div id="commonKeywords" class="common-list mt-2"></div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-light rounded">
+                <strong>Common Methods</strong>
+                <div id="commonMethods" class="common-list mt-2"></div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-light rounded">
+                <strong>Common Tech</strong>
+                <div id="commonTech" class="common-list mt-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <h6>
+            <i class="fas fa-star me-2 text-warning"></i>Unique to Each Paper
+          </h6>
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <div class="p-3 bg-warning bg-opacity-10 rounded">
+                <strong>Paper 1 Only</strong>
+                <div id="uniquePaper1" class="unique-list mt-2"></div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-info bg-opacity-10 rounded">
+                <strong>Paper 2 Only</strong>
+                <div id="uniquePaper2" class="unique-list mt-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const paper1 = document.getElementById("paper1");
+    const paper2 = document.getElementById("paper2");
+    const compareBtn = document.getElementById("compareBtn");
+    const loadingSpinner = document.getElementById("loadingSpinner");
+    const comparisonResults = document.getElementById("comparisonResults");
+
+    function updateCompareBtn() {
+      const p1 = paper1.value;
+      const p2 = paper2.value;
+
+      // Reset styles
+      paper1.style.borderColor = "#e5e7eb";
+      paper2.style.borderColor = "#e5e7eb";
+
+      if (p1 && p2 && p1 === p2) {
+        paper1.style.borderColor = "#ef4444";
+        paper2.style.borderColor = "#ef4444";
+        compareBtn.disabled = true;
+        compareBtn.innerHTML =
+          '<i class="fas fa-exclamation-triangle"></i> <span>Same Paper Selected</span>';
+        compareBtn.style.background =
+          "linear-gradient(135deg, #ef4444, #dc2626)";
+      } else {
+        compareBtn.disabled = !(p1 && p2);
+        compareBtn.innerHTML =
+          '<i class="fas fa-search"></i> <span>Compare Papers</span>';
+        compareBtn.style.background =
+          "linear-gradient(135deg, #6366f1, #ec4899)";
+      }
+    }
+
+    paper1.addEventListener("change", updateCompareBtn);
+    paper2.addEventListener("change", updateCompareBtn);
+
+    compareBtn.addEventListener("click", async function () {
+      if (!paper1.value || !paper2.value) return;
+      if (paper1.value === paper2.value) {
+        alert("Please select two different papers for comparison");
+        return;
+      }
+
+      loadingSpinner.style.display = "block";
+      comparisonResults.style.display = "none";
+
+      try {
+        const response = await fetch(
+          `/compare/papers/${paper1.value}/${paper2.value}/`,
+          {
+            headers: {
+              'Accept': 'application/json'
+            }
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          alert("Error: " + data.error);
+          return;
+        }
+
+        renderComparison(data);
+        comparisonResults.style.display = "block";
+      } catch (error) {
+        console.error("Comparison error:", error);
+        alert("Failed to compare papers. Error: " + error.message);
+      } finally {
+        loadingSpinner.style.display = "none";
+      }
+    });
+
+    function renderComparison(data) {
+      const p1 = data.paper1;
+      const p2 = data.paper2;
+      const comp = data.comparison;
+
+      document.getElementById("title1").textContent = p1.title || "Untitled";
+      document.getElementById("title2").textContent = p2.title || "Untitled";
+      document.getElementById("author1").textContent = p1.authors || "Unknown";
+      document.getElementById("author2").textContent = p2.authors || "Unknown";
+      document.getElementById("pubDate1").textContent =
+        p1.publication_date || "Unknown";
+      document.getElementById("pubDate2").textContent =
+        p2.publication_date || "Unknown";
+      document.getElementById("wordCount1").textContent = (
+        p1.word_count || 0
+      ).toLocaleString();
+      document.getElementById("wordCount2").textContent = (
+        p2.word_count || 0
+      ).toLocaleString();
+      document.getElementById("abstract1").textContent =
+        p1.abstract || "No abstract available";
+      document.getElementById("abstract2").textContent =
+        p2.abstract || "No abstract available";
+
+      document.getElementById("keywords1").innerHTML =
+        (p1.keywords && p1.keywords.length > 0)
+          ? p1.keywords.map((k) => `<span class="keyword-badge">${k}</span>`).join("")
+          : '<span class="text-muted">None</span>';
+      document.getElementById("keywords2").innerHTML =
+        (p2.keywords && p2.keywords.length > 0)
+          ? p2.keywords.map((k) => `<span class="keyword-badge">${k}</span>`).join("")
+          : '<span class="text-muted">None</span>';
+      document.getElementById("methods1").innerHTML =
+        (p1.methodology && p1.methodology.length > 0)
+          ? p1.methodology.map((m) => `<span class="tech-badge">${m}</span>`).join("")
+          : '<span class="text-muted">None</span>';
+      document.getElementById("methods2").innerHTML =
+        (p2.methodology && p2.methodology.length > 0)
+          ? p2.methodology.map((m) => `<span class="tech-badge">${m}</span>`).join("")
+          : '<span class="text-muted">None</span>';
+      document.getElementById("tech1").innerHTML =
+        (p1.technologies && p1.technologies.length > 0)
+          ? p1.technologies.map((t) => `<span class="tech-badge" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46;">${t}</span>`).join("")
+          : '<span class="text-muted">None</span>';
+      document.getElementById("tech2").innerHTML =
+        (p2.technologies && p2.technologies.length > 0)
+          ? p2.technologies.map((t) => `<span class="tech-badge" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46;">${t}</span>`).join("")
+          : '<span class="text-muted">None</span>';
+
+      document.getElementById("overallSim").textContent =
+        comp.overall_similarity + "%";
+      document.getElementById("keywordSim").textContent =
+        comp.keyword_similarity + "%";
+      document.getElementById("methodSim").textContent =
+        comp.method_similarity + "%";
+      document.getElementById("abstractSim").textContent =
+        comp.tech_similarity + "%";
+
+      document.getElementById("commonKeywords").innerHTML =
+        (comp.common_keywords && comp.common_keywords.length > 0)
+          ? comp.common_keywords.map((k) => `<span class="keyword-badge">${k}</span>`).join("")
+          : '<span class="text-muted">None</span>';
+      document.getElementById("commonMethods").innerHTML =
+        (comp.common_methods && comp.common_methods.length > 0)
+          ? comp.common_methods.map((m) => `<span class="tech-badge">${m}</span>`).join("")
+          : '<span class="text-muted">None</span>';
+      document.getElementById("commonTech").innerHTML =
+        (comp.common_tech && comp.common_tech.length > 0)
+          ? comp.common_tech.map((t) => `<span class="tech-badge">${t}</span>`).join("")
+          : '<span class="text-muted">None</span>';
+
+      document.getElementById("uniquePaper1").innerHTML =
+        (comp.unique_p1 && comp.unique_p1.length > 0)
+          ? comp.unique_p1.slice(0, 10).map((i) => `<span class="keyword-badge" style="background: #fef3c7; color: #92400e;">${i}</span>`).join("")
+          : '<span class="text-muted">None</span>';
+      document.getElementById("uniquePaper2").innerHTML =
+        (comp.unique_p2 && comp.unique_p2.length > 0)
+          ? comp.unique_p2.slice(0, 10).map((i) => `<span class="keyword-badge" style="background: #dbeafe; color: #1e40af;">${i}</span>`).join("")
+          : '<span class="text-muted">None</span>';
+
+      comparisonResults.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+</script>
+{% endblock %}

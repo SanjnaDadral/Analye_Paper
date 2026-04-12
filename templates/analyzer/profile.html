@@ -1,0 +1,252 @@
+{% extends 'analyzer/base.html' %} {% load static %} {% block title %}Profile -
+PaperAIzer{% endblock %} {% block extra_css %}
+<style>
+  .profile-header {
+    background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+  }
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .stat-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.15);
+  }
+  .stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+  }
+  .profile-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .profile-card h5 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+  }
+  .profile-card h5 i {
+    color: var(--primary);
+  }
+  .info-row {
+    display: flex;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .info-row:last-child {
+    border-bottom: none;
+  }
+  .info-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    width: 120px;
+    flex-shrink: 0;
+  }
+  .info-value {
+    color: var(--text-primary);
+  }
+  .paper-item {
+    display: block;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s;
+  }
+  .paper-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    transform: translateX(5px);
+  }
+  .paper-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+  }
+  .paper-meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+  }
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container py-4">
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <div class="profile-avatar">
+          {{ user.username|make_list|first|upper }}
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="mb-1">{{ user.username }}</h2>
+        <p class="mb-0 opacity-75">
+          <i class="fas fa-calendar me-2"></i>Member since {{ member_since|date:"F Y" }}
+        </p>
+      </div>
+      <div class="col-auto">
+        <a href="{% url 'logout' %}" class="btn btn-light">
+          <i class="fas fa-sign-out-alt me-2"></i>Logout
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-value">{{ total_papers|default:0 }}</div>
+        <div class="stat-label">Papers Analyzed</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-value">{{ unique_keywords|default:0 }}</div>
+        <div class="stat-label">Keywords</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-value">{{ avg_plagiarism|default:0 }}%</div>
+        <div class="stat-label">Avg Plagiarism</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-value">{{ documents.count|default:0 }}</div>
+        <div class="stat-label">Total Documents</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Profile Info -->
+    <div class="col-lg-4">
+      <div class="profile-card">
+        <h5><i class="fas fa-user-circle"></i> Profile Information</h5>
+
+        <div class="info-row">
+          <span class="info-label">Username</span>
+          <span class="info-value">{{ user.username }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">First Name</span>
+          <span class="info-value">{{ user.first_name|default:"-" }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Last Name</span>
+          <span class="info-value">{{ user.last_name|default:"-" }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <span class="info-value">{{ user.email|default:"-" }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Member Since</span>
+          <span class="info-value">{{ member_since|date:"M d, Y" }}</span>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="profile-card">
+        <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
+        <div class="d-grid gap-2">
+          <a href="{% url 'home' %}" class="btn btn-primary-custom">
+            <i class="fas fa-upload me-2"></i>Analyze New Paper
+          </a>
+          <a href="{% url 'library' %}" class="btn btn-secondary-custom">
+            <i class="fas fa-folder-open me-2"></i>View Library
+          </a>
+          <a href="{% url 'compare' %}" class="btn btn-secondary-custom">
+            <i class="fas fa-balance-scale me-2"></i>Compare Papers
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Papers -->
+    <div class="col-lg-8">
+      <div class="profile-card">
+        <h5><i class="fas fa-file-pdf"></i> Your Recent Papers</h5>
+
+        {% if documents %} {% for doc in documents|slice:":10" %}
+        <a href="{% url 'result' doc.id %}" class="paper-item">
+          <div class="paper-title">
+            <i class="fas fa-file-pdf me-2 text-danger"></i>
+            {{ doc.title|truncatechars:60 }}
+          </div>
+          <div class="paper-meta">
+            <i class="fas fa-calendar me-1"></i>{{ doc.created_at|date:"M d, Y" }}
+            <span class="ms-3"
+              ><i class="fas fa-font me-1"></i>{{ doc.word_count|default:0 }}
+              words</span
+            >
+          </div>
+        </a>
+        {% endfor %} {% if documents.count > 10 %}
+        <a
+          href="{% url 'library' %}"
+          class="btn btn-outline-primary w-100 mt-2"
+        >
+          View All {{ documents.count }} Papers
+        </a>
+        {% endif %} {% else %}
+        <div class="empty-state">
+          <i class="fas fa-inbox"></i>
+          <h5>No papers yet</h5>
+          <p>Analyze your first research paper to get started!</p>
+          <a href="{% url 'home' %}" class="btn btn-primary mt-2">
+            <i class="fas fa-upload me-2"></i>Analyze Paper
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
