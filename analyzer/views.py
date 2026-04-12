@@ -252,7 +252,12 @@ def logout_view(request):
 #     except Exception as e:
 #         logger.error(e, exc_info=True)
 #         return JsonResponse({'error': str(e)}, status=500)
+def analyze_document(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Login required'}, status=401)
 
+    if request.method != "POST":
+        return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def analyze_document(request):
     if not request.user.is_authenticated:
@@ -422,6 +427,9 @@ def profile(request):
 
 @login_required
 def dashboard(request):
+    documents = Document.objects.filter(user=user)
+
+total_papers = documents.count()
     """Dashboard page"""
     from django.utils import timezone
     from django.db.models import Count, Avg, Sum

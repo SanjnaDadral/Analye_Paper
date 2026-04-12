@@ -251,17 +251,14 @@ class AnalysisHandler {
     }
     return true;
   }
-
   async submitAnalysis(formData) {
     this.isProcessing = true;
     this.disableForm();
     this.showFourBoxesAnimation();
 
-    // Start simulated progress to prevent "stuck" feeling
     let currentStep = 1;
     this.updateFourBoxes(currentStep);
 
-    // Auto-advance simulation
     const simulationInterval = setInterval(() => {
       if (currentStep < 3) {
         currentStep++;
@@ -269,38 +266,48 @@ class AnalysisHandler {
       } else {
         clearInterval(simulationInterval);
       }
-    }, 4500); // Advance every 4.5 seconds
+    }, 4500);
 
     try {
       const response = await fetch("/analyze/", {
         method: "POST",
         body: formData,
+        credentials: "same-origin",
         headers: {
           "X-CSRFToken": this.getCsrfToken(),
           "X-Requested-With": "XMLHttpRequest",
         },
       });
 
-      const data = await response.json();
-      clearInterval(simulationInterval); // Stop simulation once we have real data
+      let data;
+
+      try {
+        data = await response.json();
+      } catch (e) {
+        clearInterval(simulationInterval);
+        this.showError("Server returned invalid response");
+        return;
+      }
+
+      clearInterval(simulationInterval);
 
       if (!response.ok || !data.success) {
         this.showError(data.error || "Analysis failed");
         return;
       }
 
-      // Fill to complete immediately on success
+      // complete animation
       this.updateFourBoxes(3);
       this.updateFourBoxes(4);
 
-      // Show success
       this.showSuccess(data);
 
-      // Redirect
       setTimeout(() => {
         window.location.href = data.redirect_url;
       }, 1000);
+
     } catch (error) {
+      clearInterval(simulationInterval);
       console.error("Analysis error:", error);
       this.showError(`Network error: ${error.message}`);
     } finally {
@@ -308,6 +315,63 @@ class AnalysisHandler {
       this.enableForm();
     }
   }
+  // async submitAnalysis(formData) {
+  //   this.isProcessing = true;
+  //   this.disableForm();
+  //   this.showFourBoxesAnimation();
+
+  //   // Start simulated progress to prevent "stuck" feeling
+  //   let currentStep = 1;
+  //   this.updateFourBoxes(currentStep);
+
+  //   // Auto-advance simulation
+  //   const simulationInterval = setInterval(() => {
+  //     if (currentStep < 3) {
+  //       currentStep++;
+  //       this.updateFourBoxes(currentStep);
+  //     } else {
+  //       clearInterval(simulationInterval);
+  //     }
+  //   }, 4500); // Advance every 4.5 seconds
+
+  //   // try {
+  //   //   const response = await fetch("/analyze/", {
+  //   //     method: "POST",
+  //   //     body: formData,
+  //   //     headers: {
+  //   //       "X-CSRFToken": this.getCsrfToken(),
+  //   //       "X-Requested-With": "XMLHttpRequest",
+  //   //     },
+  //   //   });
+
+  //   //   const data = await response.json();
+  //   //   clearInterval(simulationInterval); // Stop simulation once we have real data
+
+  //   //   if (!response.ok || !data.success) {
+  //   //     this.showError(data.error || "Analysis failed");
+  //   //     return;
+  //   //   }
+
+
+  //     // Fill to complete immediately on success
+  //     this.updateFourBoxes(3);
+  //     this.updateFourBoxes(4);
+
+  //     // Show success
+  //     this.showSuccess(data);
+
+  //     // Redirect
+  //     setTimeout(() => {
+  //       window.location.href = data.redirect_url;
+  //     }, 1000);
+  //   } catch (error) {
+  //     console.error("Analysis error:", error);
+  //     this.showError(`Network error: ${error.message}`);
+  //   } finally {
+  //     this.isProcessing = false;
+  //     this.enableForm();
+  //   }
+  // }
 
   updateFourBoxes(step) {
     if (!this.fourBoxesContainer) return;
