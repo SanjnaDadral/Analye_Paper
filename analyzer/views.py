@@ -428,9 +428,13 @@ def profile(request):
 @login_required
 def dashboard(request):
     documents = Document.objects.filter(user=user)
-
-total_papers = documents.count()
+    total_papers = documents.count()
     """Dashboard page"""
+
+    print("USER:", request.user)
+    print("DOC COUNT:", Document.objects.filter(user=request.user).count())
+    print("ALL DOCS:", Document.objects.count())
+
     from django.utils import timezone
     from django.db.models import Count, Avg, Sum
     from datetime import timedelta
