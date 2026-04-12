@@ -1,439 +1,412 @@
 <!doctype html>
 {% load static %}
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="PaperAIzer - AI-powered research paper analyzer"
-    />
-    <meta name="theme-color" content="#6366f1" />
 
-    <title>
-      {% block title %}PaperAIzer - AI Research Paper Analyzer{% endblock %}
-    </title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PaperAIzer - AI-powered research paper analyzer" />
+  <meta name="theme-color" content="#6366f1" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+  <title>
+    {% block title %}PaperAIzer - AI Research Paper Analyzer{% endblock %}
+  </title>
 
-    <link
-      rel="stylesheet"
-      href="{% static 'bootstrap/css/bootstrap.min.css' %}"
-    />
-    <link
-      rel="stylesheet"
-      href="{% static 'font-awesome/css/all.min.css' %}"
-    />
-    <!-- Font Awesome CDN Fallback -->
-    <link 
-      rel="stylesheet" 
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
-      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
-      crossorigin="anonymous" 
-      referrerpolicy="no-referrer" 
-    />
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
-    <style>
-      .navbar {
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}" />
+  <!-- Font Awesome CDN Fallback -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  <style>
+    .navbar {
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+
+    .navbar.loading {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .profile-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .profile-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: none;
+      border: 2px solid transparent;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      color: inherit;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .profile-toggle:hover {
+      background: rgba(99, 102, 241, 0.1);
+      border-color: #6366f1;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    .dropdown-menu-profile {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      min-width: 200px;
+      margin-top: 0.5rem;
+      display: none;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .dropdown-menu-profile.show {
+      display: block;
+      animation: slideDown 0.2s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
         opacity: 1;
-        transition: opacity 0.2s ease;
+        transform: translateY(0);
       }
-      .navbar.loading {
-        opacity: 0.5;
-        pointer-events: none;
-      }
-      .profile-dropdown {
-        position: relative;
-        display: inline-block;
-      }
-      .profile-toggle {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: none;
-        border: 2px solid transparent;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        cursor: pointer;
-        color: inherit;
-        font-weight: 600;
-        transition: all 0.3s ease;
-      }
-      .profile-toggle:hover {
-        background: rgba(99, 102, 241, 0.1);
-        border-color: #6366f1;
-      }
-      .user-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #6366f1, #ec4899);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 700;
-        font-size: 0.8rem;
-      }
-      .dropdown-menu-profile {
-        position: absolute;
-        top: 100%;
-        right: 0;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        min-width: 200px;
-        margin-top: 0.5rem;
-        display: none;
-        z-index: 1000;
-        overflow: hidden;
-      }
-      .dropdown-menu-profile.show {
-        display: block;
-        animation: slideDown 0.2s ease;
-      }
-      @keyframes slideDown {
-        from {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .dropdown-item-profile {
-        display: block;
-        padding: 0.75rem 1.5rem;
-        color: #0f172a;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        border-bottom: 1px solid #f1f5f9;
-      }
-      .dropdown-item-profile:last-child {
-        border-bottom: none;
-      }
-      .dropdown-item-profile:hover {
-        background: #f8fafc;
-        color: #6366f1;
-      }
-      .dropdown-item-profile i {
-        width: 20px;
-        margin-right: 0.75rem;
-      }
-      .btn-logout {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font: inherit;
-      }
-      .btn-link {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font: inherit;
-        text-decoration: none;
-      }
-      .footer {
-        background: #1e293b;
-        color: white;
-        padding: 3rem 0 1.5rem;
-      }
-      .footer a {
-        color: #94a3b8;
-        text-decoration: none;
-        transition: color 0.2s;
-      }
-      .footer a:hover {
-        color: #ec4899;
-      }
-      .footer h6 {
-        color: white;
-        font-weight: 600;
-        margin-bottom: 1rem;
-      }
-      .footer ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .footer li {
-        margin-bottom: 0.5rem;
-      }
-      .footer-bottom {
-        border-top: 1px solid #334155;
-        padding-top: 1.5rem;
-        margin-top: 2rem;
-        color: #94a3b8;
-        font-size: 0.85rem;
-      }
-      .footer-brand {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-      }
-      .footer-brand-icon {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #6366f1, #ec4899);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 700;
-        font-size: 1.2rem;
-      }
-      .footer-brand-name {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: white;
-      }
-    </style>
+    }
 
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%236366f1'/><stop offset='100%25' style='stop-color:%238b5cf6'/></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23grad)'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-family='system-ui' font-weight='bold'>P</text></svg>"
-    />
+    .dropdown-item-profile {
+      display: block;
+      padding: 0.75rem 1.5rem;
+      color: #0f172a;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid #f1f5f9;
+    }
 
-    {% block extra_css %}{% endblock %}
-  </head>
-  <body>
-    {% if messages %}
-    <div class="server-messages">
-      {% for message in messages %}
-      <div class="server-message {{ message.tags|default:'info' }}">
-        <i
-          class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"
-        ></i>
-        {{ message }}
-      </div>
-      {% endfor %}
+    .dropdown-item-profile:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-item-profile:hover {
+      background: #f8fafc;
+      color: #6366f1;
+    }
+
+    .dropdown-item-profile i {
+      width: 20px;
+      margin-right: 0.75rem;
+    }
+
+    .btn-logout {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .btn-link {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font: inherit;
+      text-decoration: none;
+    }
+
+    .footer {
+      background: #1e293b;
+      color: white;
+      padding: 3rem 0 1.5rem;
+    }
+
+    .footer a {
+      color: #94a3b8;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer a:hover {
+      color: #ec4899;
+    }
+
+    .footer h6 {
+      color: white;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .footer ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer li {
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid #334155;
+      padding-top: 1.5rem;
+      margin-top: 2rem;
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .footer-brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .footer-brand-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: white;
+    }
+  </style>
+
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%236366f1'/><stop offset='100%25' style='stop-color:%238b5cf6'/></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23grad)'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-family='system-ui' font-weight='bold'>P</text></svg>" />
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+  {% if messages %}
+  <div class="server-messages">
+    {% for message in messages %}
+    <div class="server-message {{ message.tags|default:'info' }}">
+      <i
+        class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+      {{ message }}
     </div>
-    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
 
-    <nav class="navbar navbar-expand-lg">
-      <div class="container-fluid px-4">
-        <!-- Logo -->
-        <a class="navbar-brand" href="{% url 'home' %}">
-          <div class="brand-icon">
-            <i class="fas fa-brain"></i>
-          </div>
-          <span class="brand-text"
-            >Paper<span class="brand-accent">AI</span>zer</span
-          >
-        </a>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid px-4">
+      <!-- Logo -->
+      <a class="navbar-brand" href="{% url 'home' %}">
+        <div class="brand-icon">
+          <i class="fas fa-brain"></i>
+        </div>
+        <span class="brand-text">Paper<span class="brand-accent">AI</span>zer</span>
+      </a>
 
-        <!-- Mobile Toggle -->
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
+      <!-- Mobile Toggle -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-        <!-- Navigation Links + Profile -->
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a
-                class="nav-link {% if request.path == '/' %}active{% endif %}"
-                href="{% url 'home' %}"
-              >
-                <i class="fas fa-home me-1"></i> Home
-              </a>
-            </li>
-            <li class="nav-item">
-              <a
-                class="nav-link {% if request.path == '/upload/' %}active{% endif %}"
-                href="{% url 'upload' %}"
-              >
-                <i class="fas fa-upload me-1"></i> Analyze
-              </a>
-            </li>
-            <li class="nav-item">
-              <a
-                class="nav-link {% if 'library' in request.path %}active{% endif %}"
-                href="{% url 'library' %}"
-              >
-                <i class="fas fa-folder-open me-1"></i> Library
-              </a>
-            </li>
-            {% if user.is_authenticated %}
-            <li class="nav-item">
-              <a
-                class="nav-link {% if 'compare' in request.path %}active{% endif %}"
-                href="{% url 'compare' %}"
-              >
-                <i class="fas fa-exchange-alt me-1"></i> Compare
-              </a>
-            </li>
-            <li class="nav-item">
-              <a
-                class="nav-link {% if 'dashboard' in request.path %}active{% endif %}"
-                href="{% url 'dashboard' %}"
-              >
-                <i class="fas fa-chart-line me-1"></i> Dashboard
-              </a>
-            </li>
-            <li class="nav-item profile-dropdown">
-              <button
-                class="nav-link profile-toggle"
-                onclick="toggleProfileDropdown(event)"
-                style="border: none; background: transparent;"
-              >
-                <div class="user-avatar">
-                  {{ user.username|make_list|first|upper }}
-                </div>
-                <span>{{ user.username }}</span>
-                <i class="fas fa-chevron-down" style="font-size: 0.7rem"></i>
-              </button>
-              <div class="dropdown-menu-profile" id="profileDropdown">
-                <a href="{% url 'dashboard' %}" class="dropdown-item-profile">
-                  <i class="fas fa-grip"></i>Dashboard
-                </a>
-                <a href="{% url 'library' %}" class="dropdown-item-profile">
-                  <i class="fas fa-folder"></i>My Library
-                </a>
-                <a href="{% url 'compare' %}" class="dropdown-item-profile">
-                  <i class="fas fa-balance-scale"></i>Compare
-                </a>
-                <form method="post" action="{% url 'logout' %}" class="d-block">
-                  {% csrf_token %}
-                  <button
-                    type="submit"
-                    class="dropdown-item-profile w-100 text-start"
-                    style="background: none; border: none"
-                  >
-                    <i class="fas fa-sign-out-alt"></i>Logout
-                  </button>
-                </form>
+      <!-- Navigation Links + Profile -->
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
+              <i class="fas fa-home me-1"></i> Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.path == '/upload/' %}active{% endif %}" href="{% url 'upload' %}">
+              <i class="fas fa-upload me-1"></i> Analyze
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if 'library' in request.path %}active{% endif %}" href="{% url 'library' %}">
+              <i class="fas fa-folder-open me-1"></i> Library
+            </a>
+          </li>
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link {% if 'compare' in request.path %}active{% endif %}" href="{% url 'compare' %}">
+              <i class="fas fa-exchange-alt me-1"></i> Compare
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if 'dashboard' in request.path %}active{% endif %}" href="{% url 'dashboard' %}">
+              <i class="fas fa-chart-line me-1"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item profile-dropdown">
+            <button class="nav-link profile-toggle" onclick="toggleProfileDropdown(event)"
+              style="border: none; background: transparent;">
+              <div class="user-avatar">
+                {{ user.username|make_list|first|upper }}
               </div>
-            </li>
+              <span>{{ user.username }}</span>
+              <i class="fas fa-chevron-down" style="font-size: 0.7rem"></i>
+            </button>
+            <div class="dropdown-menu-profile" id="profileDropdown">
+              <a href="{% url 'dashboard' %}" class="dropdown-item-profile">
+                <i class="fas fa-grip"></i>Dashboard
+              </a>
+              <a href="{% url 'library' %}" class="dropdown-item-profile">
+                <i class="fas fa-folder"></i>My Library
+              </a>
+              <a href="{% url 'compare' %}" class="dropdown-item-profile">
+                <i class="fas fa-balance-scale"></i>Compare
+              </a>
+              <form method="post" action="{% url 'logout' %}" class="d-block">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item-profile w-100 text-start"
+                  style="background: none; border: none">
+                  <i class="fas fa-sign-out-alt"></i>Logout
+                </button>
+              </form>
+            </div>
+          </li>
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link {% if 'login' in request.path %}active{% endif %}" href="{% url 'login' %}">
+              <i class="fas fa-sign-in-alt me-1"></i> Login
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if 'register' in request.path %}active{% endif %}" href="{% url 'register' %}">
+              <i class="fas fa-user-plus me-1"></i> Sign Up
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">{% block content %}{% endblock %}</main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 mb-4 mb-md-0">
+          <div class="footer-brand">
+            <div class="footer-brand-icon"><i class="fas fa-brain"></i></div>
+            <span class="footer-brand-name">PaperAIzer</span>
+          </div>
+          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6">
+            AI-powered research paper analysis. Extract insights, detect
+            plagiarism, and compare papers instantly.
+          </p>
+        </div>
+        <div class="col-md-2 mb-4 mb-md-0">
+          <h6>Navigation</h6>
+          <ul>
+            <li><a href="{% url 'home' %}">Analyze</a></li>
+            <li><a href="{% url 'library' %}">Library</a></li>
+            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'compare' %}">Compare</a></li>
+          </ul>
+        </div>
+        <div class="col-md-2 mb-4 mb-md-0">
+          <h6>Account</h6>
+          <ul>
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'library' %}">Library</a></li>
             {% else %}
-            <li class="nav-item">
-              <a
-                class="nav-link {% if 'login' in request.path %}active{% endif %}"
-                href="{% url 'login' %}"
-              >
-                <i class="fas fa-sign-in-alt me-1"></i> Login
-              </a>
-            </li>
-            <li class="nav-item">
-              <a
-                class="nav-link {% if 'register' in request.path %}active{% endif %}"
-                href="{% url 'register' %}"
-              >
-                <i class="fas fa-user-plus me-1"></i> Sign Up
-              </a>
-            </li>
+            <li><a href="{% url 'login' %}">Login</a></li>
+            <li><a href="{% url 'register' %}">Sign Up</a></li>
             {% endif %}
           </ul>
         </div>
-      </div>
-    </nav>
-
-    <main class="main-content">{% block content %}{% endblock %}</main>
-
-    <footer class="footer">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-4 mb-4 mb-md-0">
-            <div class="footer-brand">
-              <div class="footer-brand-icon"><i class="fas fa-brain"></i></div>
-              <span class="footer-brand-name">PaperAIzer</span>
-            </div>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6">
-              AI-powered research paper analysis. Extract insights, detect
-              plagiarism, and compare papers instantly.
-            </p>
-          </div>
-          <div class="col-md-2 mb-4 mb-md-0">
-            <h6>Navigation</h6>
-            <ul>
-              <li><a href="{% url 'home' %}">Analyze</a></li>
-              <li><a href="{% url 'library' %}">Library</a></li>
-              <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-              <li><a href="{% url 'compare' %}">Compare</a></li>
-            </ul>
-          </div>
-          <div class="col-md-2 mb-4 mb-md-0">
-            <h6>Account</h6>
-            <ul>
-              {% if user.is_authenticated %}
-              <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-              <li><a href="{% url 'library' %}">Library</a></li>
-              {% else %}
-              <li><a href="{% url 'login' %}">Login</a></li>
-              <li><a href="{% url 'register' %}">Sign Up</a></li>
-              {% endif %}
-            </ul>
-          </div>
-          <div class="col-md-2 mb-4 mb-md-0">
-            <h6>Support</h6>
-            <ul>
-              <li><a href="{% url 'contact' %}">Contact</a></li>
-              <li><a href="{% url 'forgot_password' %}">Forgot Password</a></li>
-            </ul>
-          </div>
-          <div class="col-md-2">
-            <h6>Legal</h6>
-            <ul>
-              <li><a href="#">Privacy Policy</a></li>
-              <li><a href="#">Terms of Service</a></li>
-            </ul>
-          </div>
+        <div class="col-md-2 mb-4 mb-md-0">
+          <h6>Support</h6>
+          <ul>
+            <li><a href="{% url 'contact' %}">Contact</a></li>
+            <li><a href="{% url 'forgot_password' %}">Forgot Password</a></li>
+          </ul>
         </div>
-        <div class="footer-bottom text-center">
-          <p style="margin: 0">
-            &copy; 2026 PaperAIzer. Powered by Advanced NLP & Machine Learning
-          </p>
+        <div class="col-md-2">
+          <h6>Legal</h6>
+          <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+          </ul>
         </div>
       </div>
-    </footer>
+      <div class="footer-bottom text-center">
+        <p style="margin: 0">
+          &copy; 2026 PaperAIzer. Powered by Advanced NLP & Machine Learning
+        </p>
+      </div>
+    </div>
+  </footer>
 
-    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-    <script>
-      function toggleProfileDropdown(event) {
-        event.preventDefault();
-        const dropdown = document.getElementById("profileDropdown");
-        dropdown.classList.toggle("show");
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script>
+    function toggleProfileDropdown(event) {
+      event.preventDefault();
+      const dropdown = document.getElementById("profileDropdown");
+      dropdown.classList.toggle("show");
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", function (event) {
+      const dropdown = document.getElementById("profileDropdown");
+      const toggle = event.target.closest(".profile-toggle");
+      if (!toggle && dropdown && dropdown.classList.contains("show")) {
+        dropdown.classList.remove("show");
       }
+    });
 
-      // Close dropdown when clicking outside
-      document.addEventListener("click", function (event) {
+    // Close dropdown when clicking on a link inside
+    const dropdownLinks = document.querySelectorAll(".dropdown-item-profile");
+    dropdownLinks.forEach((link) => {
+      link.addEventListener("click", function () {
         const dropdown = document.getElementById("profileDropdown");
-        const toggle = event.target.closest(".profile-toggle");
-        if (!toggle && dropdown && dropdown.classList.contains("show")) {
+        if (dropdown) {
           dropdown.classList.remove("show");
         }
       });
+    });
+  </script>
+  <script src="{% static 'js/app.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
 
-      // Close dropdown when clicking on a link inside
-      const dropdownLinks = document.querySelectorAll(".dropdown-item-profile");
-      dropdownLinks.forEach((link) => {
-        link.addEventListener("click", function () {
-          const dropdown = document.getElementById("profileDropdown");
-          if (dropdown) {
-            dropdown.classList.remove("show");
-          }
-        });
-      });
-    </script>
-    <script src="{% static 'js/app.js' %}"></script>
-    {% block extra_js %}{% endblock %}
-  </body>
 </html>
