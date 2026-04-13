@@ -11,7 +11,11 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-change-in-producti
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["research-9.onrender.com"]
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "research-9.onrender.com"
+]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://research-9.onrender.com"
@@ -76,8 +80,6 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 LANGUAGE_CODE = 'en-us'
@@ -178,7 +180,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
-# AUTHENTICATION_BACKENDS = ['analyzer.backends.EmailOrUsernameModelBackend']
+AUTHENTICATION_BACKENDS = ['analyzer.backends.EmailOrUsernameModelBackend']
 
 # Simple password requirements
 # AUTH_PASSWORD_VALIDATORS = []

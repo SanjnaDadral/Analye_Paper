@@ -256,13 +256,6 @@ def analyze_document(request):
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Login required'}, status=401)
 
-    if request.method != "POST":
-        return JsonResponse({'error': 'Invalid request'}, status=400)
-
-def analyze_document(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Login required'}, status=401)
-
     try:
         input_type = request.POST.get('input_type', 'pdf')
         content = None
@@ -279,8 +272,7 @@ def analyze_document(request):
             result = pdf_processor.extract_text(uploaded_file)
             if not result.get('success'):
                 return JsonResponse({'error': 'PDF extraction failed'}, status=400)
-            # content = result.get('text', '')[:ANALYSIS_TEXT_MAX]
-            content = result.get('content', '')[:ANALYSIS_TEXT_MAX]
+            content = result.get('text', '')[:ANALYSIS_TEXT_MAX]
             document_input_type = 'pdf'
             
             # Extract images from PDF for the visual assets
@@ -349,9 +341,9 @@ def analyze_document(request):
                     'error': f'Failed to fetch URL content: {str(e)}'
                 }, status=400)
 
-        # keep this as it is
-        if not content or len(content.strip()) < 50:
-            return JsonResponse({'error': 'Not enough text content for analysis'}, status=400)
+        # Validate minimum text content (relaxed from 50 to 30 chars for better UX)
+        if not content or len(content.strip()) < 30:
+            return JsonResponse({'error': 'Not enough text content for analysis (need at least 30 characters)'}, status=400)
         # EXTRACT TITLE
         lines = content.split('\n')
         for line in lines:
@@ -461,17 +453,10 @@ def profile(request):
 
 @login_required
 def dashboard(request):
-    ocuments = Document.objects.filter(user=user)
-    total_papers = documents.count()
     """Dashboard page"""
-
-    print("USER:", request.user)
-    print("DOC COUNT:", Document.objects.filter(user=request.user).count())
-    print("ALL DOCS:", Document.objects.count())
-
     from django.utils import timezone
     from django.db.models import Count, Avg, Sum
-    from datetime  import timedelta
+    from datetime import timedelta
     
     user = request.user
     
