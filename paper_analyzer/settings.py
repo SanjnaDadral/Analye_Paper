@@ -12,10 +12,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-change-in-producti
 # ✅ FIXED: use env
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ["research-10.onrender.com"]
+ALLOWED_HOSTS = ["research-11.onrender.com"]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://research-10.onrender.com"
+    "https://research-11.onrender.com"
 ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
