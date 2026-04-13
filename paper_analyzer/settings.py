@@ -16,6 +16,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-change-in-producti
 #     'localhost',
 #     '127.0.0.1'
 # ]
+DEBUG = False
 ALLOWED_HOSTS = ["research-13.onrender.com"]
 
 CSRF_TRUSTED_ORIGINS = [
