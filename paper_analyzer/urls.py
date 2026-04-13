@@ -8,9 +8,9 @@ urlpatterns = [
     path('', include('analyzer.urls')),
 ]
 
-# Serve media files in both DEBUG and production
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
+# ✅ Serve media ONLY in development
 if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
     urlpatterns += staticfiles_urlpatterns()
