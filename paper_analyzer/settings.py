@@ -178,7 +178,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
-AUTHENTICATION_BACKENDS = ['analyzer.backends.EmailOrUsernameModelBackend']
+# AUTHENTICATION_BACKENDS = ['analyzer.backends.EmailOrUsernameModelBackend']
 
 # Simple password requirements
 # AUTH_PASSWORD_VALIDATORS = []
