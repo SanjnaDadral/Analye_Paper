@@ -25,7 +25,7 @@ from .models import Document, AnalysisResult, PlagiarismCheck, AnalysisFeedback,
 from .plagiarism import local_library_similarity
 from .forms import DocumentUploadForm, CustomRegistrationForm
 from .ml_model import ml_processor
-from .pdf_processor import pdf_processor
+from .pdf_processor import get_pdf_processor
 from .url_scraper import url_scraper
 from .export_manager import export_manager
 
@@ -40,92 +40,109 @@ MAX_PDF_STORE_BYTES = int(os.getenv("MAX_STORE_PDF_MB", "16")) * 1024 * 1024
 # =========================
 # 🔥 GROQ AI FUNCTION
 # =========================
-def analyze_text_with_groq(text):
-    client = Groq(api_key=settings.GROQ_API_KEY)
+# def analyze_text_with_groq(text):
+#     client = Groq(api_key=settings.GROQ_API_KEY)
 
-    prompt = f"""
-    Analyze the following research paper and provide a comprehensive JSON extraction.
-    Be extremely thorough in identifying all components.
+#     prompt = f"""
+#     Analyze the following research paper and provide a comprehensive JSON extraction.
+#     Be extremely thorough in identifying all components.
 
-    Provide:
-    - summary: A clear, multi-sentence executive summary (80-120 words).
-    - abstract: The original or reconstructed abstract.
-    - keywords: Exhaustive list of 8-15 technical keywords.
-    - methodology: Detailed list of mathematical models, algorithms, or experimental setups used.
-    - technologies: Extensive list of software, libraries, hardware, and physical tools mentioned.
-    - goal: The primary research objective or hypothesis.
-    - impact: Potential contributions to the field and real-world applications.
-    - research_gaps: A list of 3-5 limitations or future work areas mentioned.
-    - conclusion: A summary of the final findings.
-    - datasets: List of any public or private datasets mentioned.
-    - authors: Full names of all identified authors.
-    - publication_year: The year of publication (4 digits).
+#     Provide:
+#     - summary: A clear, multi-sentence executive summary (80-120 words).
+#     - abstract: The original or reconstructed abstract.
+#     - keywords: Exhaustive list of 8-15 technical keywords.
+#     - methodology: Detailed list of mathematical models, algorithms, or experimental setups used.
+#     - technologies: Extensive list of software, libraries, hardware, and physical tools mentioned.
+#     - goal: The primary research objective or hypothesis.
+#     - impact: Potential contributions to the field and real-world applications.
+#     - research_gaps: A list of 3-5 limitations or future work areas mentioned.
+#     - conclusion: A summary of the final findings.
+#     - datasets: List of any public or private datasets mentioned.
+#     - authors: Full names of all identified authors.
+#     - publication_year: The year of publication (4 digits).
 
-    TEXT:
-    {text[:20000]}
-    """
+#     TEXT:
+#     {text[:20000]}
+#     """
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {"role": "system", "content": "Return only valid JSON object, no markdown formatting."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.3,
-    )
+#     response = client.chat.completions.create(
+#         model="llama-3.3-70b-versatile",
+#         messages=[
+#             {"role": "system", "content": "Return only valid JSON object, no markdown formatting."},
+#             {"role": "user", "content": prompt}
+#         ],
+#         temperature=0.3,
+#     )
 
-    content = response.choices[0].message.content
+#     content = response.choices[0].message.content
     
-    # Clean up JSON - remove markdown code blocks if present
-    content = content.strip()
-    if content.startswith('```'):
-        content = content.split('```')[1]
-        if content.startswith('json'):
-            content = content[4:]
-        content = content.strip()
-    if content.endswith('```'):
-        content = content[:-3].strip()
+#     # Clean up JSON - remove markdown code blocks if present
+#     content = content.strip()
+#     if content.startswith('```'):
+#         content = content.split('```')[1]
+#         if content.startswith('json'):
+#             content = content[4:]
+#         content = content.strip()
+#     if content.endswith('```'):
+#         content = content[:-3].strip()
 
-    try:
-        data = json.loads(content)
-    except json.JSONDecodeError as e:
-        logger.warning(f"JSON parse error: {e}, content: {content[:200]}")
-        data = {
-            "summary": content[:500] if content else "",
-            "abstract": "",
-            "keywords": [],
-            "methodology": [],
-            "technologies": [],
-            "goal": "",
-            "impact": "",
-            "authors": [],
-            "publication_year": ""
-        }
+#     try:
+#         data = json.loads(content)
+#     except json.JSONDecodeError as e:
+#         logger.warning(f"JSON parse error: {e}, content: {content[:200]}")
+#         data = {
+#             "summary": content[:500] if content else "",
+#             "abstract": "",
+#             "keywords": [],
+#             "methodology": [],
+#             "technologies": [],
+#             "goal": "",
+#             "impact": "",
+#             "authors": [],
+#             "publication_year": ""
+#         }
 
-    # Add required stats
-    data["statistics"] = {
-        "word_count": len(text.split()),
-        "unique_words": len(set(text.split()))
-    }
+#     # Add required stats
+#     data["statistics"] = {
+#         "word_count": len(text.split()),
+#         "unique_words": len(set(text.split()))
+#     }
 
-    return data
+#     return data
 
 
 # =========================
 # VALIDATE PDF
 # =========================
+# def validate_pdf_file(file):
+#     if not file:
+#         return False, "No file provided"
+
+#     if not file.name.lower().endswith('.pdf'):
+#         return False, "Only PDF files allowed"
+
+#     if file.size > MAX_PDF_UPLOAD_BYTES:
+#         return False, "File too large"
+
+#     return True, None
+
 def validate_pdf_file(file):
     if not file:
         return False, "No file provided"
 
-    if not file.name.lower().endswith('.pdf'):
+    if not hasattr(file, 'name') or not file.name.lower().endswith('.pdf'):
         return False, "Only PDF files allowed"
 
-    if file.size > MAX_PDF_UPLOAD_BYTES:
+    # ✅ Safe size check
+    file_size = getattr(file, 'size', 0)
+
+    if file_size == 0:
+        return False, "Uploaded file is empty"
+
+    if file_size > MAX_PDF_UPLOAD_BYTES:
         return False, "File too large"
 
     return True, None
-
 
 # =========================
 # HOME
@@ -142,6 +159,17 @@ def home(request):
 # =========================
 # LOGIN
 # =========================
+# def login_view(request):
+#     if request.user.is_authenticated:
+#         return redirect('dashboard')
+
+#     form = AuthenticationForm(request, data=request.POST or None)
+
+#     if request.method == 'POST' and form.is_valid():
+#         login(request, form.get_user())
+#         return redirect('dashboard')
+
+#     return render(request, 'analyzer/login.html', {'form': form})
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -153,7 +181,6 @@ def login_view(request):
         return redirect('dashboard')
 
     return render(request, 'analyzer/login.html', {'form': form})
-
 
 # =========================
 # REGISTER
@@ -252,6 +279,8 @@ def logout_view(request):
 #     except Exception as e:
 #         logger.error(e, exc_info=True)
 #         return JsonResponse({'error': str(e)}, status=500)
+
+
 def analyze_document(request):
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Login required'}, status=401)
@@ -262,60 +291,37 @@ def analyze_document(request):
         title = "Analyzed Document"
         document_input_type = 'pdf'
         url_source = None
+        extracted_images_data = []
 
-        # PDF INPUT
+        # =========================
+        # 📄 PDF INPUT
+        # =========================
         if input_type == 'pdf':
             uploaded_file = request.FILES.get('pdf_file')
+
+            if not uploaded_file:
+                return JsonResponse({'error': 'No PDF uploaded'}, status=400)
+
             is_valid, error = validate_pdf_file(uploaded_file)
             if not is_valid:
                 return JsonResponse({'error': error}, status=400)
-            result = pdf_processor.extract_text(uploaded_file)
+
+            processor = get_pdf_processor()
+            result = processor.extract_text(uploaded_file)
+
             if not result.get('success'):
                 return JsonResponse({'error': 'PDF extraction failed'}, status=400)
+
             content = result.get('text', '')[:ANALYSIS_TEXT_MAX]
             document_input_type = 'pdf'
-            
-            # Extract images from PDF for the visual assets
-            try:
-                uploaded_file.seek(0)
-                extracted_images_data = pdf_processor.extract_images(uploaded_file, max_images=20)
-            except Exception as e:
-                logger.warning(f"Image extraction failed: {e}")
-                extracted_images_data = []
 
-        elif input_type == 'text':
+            # ❌ FIX: extract_images not available → skip safely
             extracted_images_data = []
-            content = request.POST.get('text_content', '').strip()[:ANALYSIS_TEXT_MAX]
-            if not content:
-                return JsonResponse({'error': 'No text content provided'}, status=400)
-            document_input_type = 'text'
 
-        # elif input_type == 'url':
-        #     extracted_images_data = []
-        #     url_input = request.POST.get('url_input', '').strip()
-        #     if not url_input:
-        #         return JsonResponse({'error': 'No URL provided'}, status=400)
-        #     try:
-        #         result = url_scraper.scrape(url_input)
-        #         if not result.get('success'):
-        #             return JsonResponse({'error': f'Failed to fetch URL: {result.get("error", "Unknown error")}'}, status=400)
-        #         content = result.get('text', '')[:ANALYSIS_TEXT_MAX]
-        #         url_source = url_input
-        #         document_input_type = 'url'
-        #     except Exception as e:
-        #         logger.error(f"URL scraping error: {e}")
-        #         return JsonResponse({'error': f'Failed to fetch URL content: {str(e)}'}, status=400)
-        # else:
-        #     return JsonResponse({'error': 'Invalid input type'}, status=400)
-
-        # if not content or len(content.strip()) < 50:
-        #     return JsonResponse({'error': 'Not enough text content for analysis'}, status=400)
-
-
-
-
+        # =========================
+        # 🌐 URL INPUT
+        # =========================
         elif input_type == 'url':
-            extracted_images_data = []
             url_input = request.POST.get('url_input', '').strip()
 
             if not url_input:
@@ -329,8 +335,8 @@ def analyze_document(request):
                         'error': f'Failed to fetch URL: {result.get("error", "Unknown error")}'
                     }, status=400)
 
-                # ✅ FIXED LINE
-                content = result.get('content', '')[:ANALYSIS_TEXT_MAX]
+                # ✅ FIXED KEY
+                content = result.get('text', '')[:ANALYSIS_TEXT_MAX]
 
                 url_source = url_input
                 document_input_type = 'url'
@@ -341,22 +347,33 @@ def analyze_document(request):
                     'error': f'Failed to fetch URL content: {str(e)}'
                 }, status=400)
 
-        # Validate minimum text content (relaxed from 50 to 30 chars for better UX)
+        else:
+            return JsonResponse({'error': 'Invalid input type'}, status=400)
+
+        # =========================
+        # 📏 VALIDATION
+        # =========================
         if not content or len(content.strip()) < 30:
-            return JsonResponse({'error': 'Not enough text content for analysis (need at least 30 characters)'}, status=400)
-        # EXTRACT TITLE
-        lines = content.split('\n')
-        for line in lines:
+            return JsonResponse({
+                'error': 'Not enough text content for analysis (min 30 chars)'
+            }, status=400)
+
+        # =========================
+        # 🏷 TITLE
+        # =========================
+        for line in content.split('\n'):
             line = line.strip()
-            if len(line) > 5 and len(line) < 200:
+            if 5 < len(line) < 200:
                 title = line[:150]
                 break
+
         if not title or title == "Analyzed Document":
             words = content.split()
             title = ' '.join(words[:10]) if words else "Analyzed Document"
 
-
-        # SAVE DOCUMENT
+        # =========================
+        # 💾 SAVE DOCUMENT
+        # =========================
         document = Document.objects.create(
             user=request.user,
             input_type=document_input_type,
@@ -365,49 +382,55 @@ def analyze_document(request):
             url=url_source,
             word_count=len(content.split())
         )
-  
-        # GROQ API ANALYSIS (Primary extraction)
+
+        # =========================
+        # 🤖 AI ANALYSIS
+        # =========================
         try:
             analysis_data = analyze_text_with_groq(content)
         except Exception as e:
-            logger.warning(f"Groq API failed: {e}, falling back to local ML")
+            logger.warning(f"Groq failed → fallback ML: {e}")
             analysis_data = ml_processor.full_analysis(content)
 
-        # PLAGIARISM CHECK (Optimized)
+        # =========================
+        # 🔍 PLAGIARISM
+        # =========================
         plagiarism = local_library_similarity(document.id, content, user=request.user)
+
         PlagiarismCheck.objects.create(
             document=document,
             similarity_score=plagiarism.get("similarity_percent", 0) / 100.0,
         )
 
-        # EXTRACT ADDITIONAL DATA (Only if not provided by Groq)
-        extracted_links = ml_processor.extract_links(content) if hasattr(ml_processor, 'extract_links') else []
-        references = ml_processor.extract_references(content) if hasattr(ml_processor, 'extract_references') else []
-        
-        # Use Groq data as source of truth to avoid redundant processing
+        # =========================
+        # 📊 EXTRACTIONS
+        # =========================
+        extracted_links = getattr(ml_processor, 'extract_links', lambda x: [])(content)
+        references = getattr(ml_processor, 'extract_references', lambda x: [])(content)
+
         keywords_detected = analysis_data.get('keywords', [])
         methodology_detected = analysis_data.get('methodology', [])
         technologies_detected = analysis_data.get('technologies', [])
-        
-        # Datasets (Groq usually misses these links)
+
         try:
-            datasets = ml_processor.extract_datasets(content) if hasattr(ml_processor, 'extract_datasets') else {}
+            datasets = getattr(ml_processor, 'extract_datasets', lambda x: {})(content)
             dataset_names = datasets.get('names', []) or analysis_data.get('datasets', [])
             dataset_links = datasets.get('links', [])
         except:
             dataset_names, dataset_links = [], []
 
-        # EXTRAS
         extras = {
             'plagiarism': plagiarism,
-            'research_gaps': analysis_data.get('research_gaps', []) or (ml_processor.detect_research_gaps(content) if hasattr(ml_processor, 'detect_research_gaps') else []),
-            'visual_assets': ml_processor.extract_visuals(content) if hasattr(ml_processor, 'extract_visuals') else {'counts': {}},
+            'research_gaps': analysis_data.get('research_gaps', []),
+            'visual_assets': getattr(ml_processor, 'extract_visuals', lambda x: {})(content),
             'methodology_summary': analysis_data.get('summary', '')[:500],
             'conclusion': analysis_data.get('conclusion', ''),
-            'extracted_images': extracted_images_data[:15], # Restored higher image count
+            'extracted_images': extracted_images_data,
         }
 
-        # SAVE ANALYSIS
+        # =========================
+        # 💾 SAVE ANALYSIS
+        # =========================
         analysis = AnalysisResult.objects.create(
             document=document,
             summary=analysis_data.get('summary', ''),
@@ -436,7 +459,6 @@ def analyze_document(request):
     except Exception as e:
         logger.error(e, exc_info=True)
         return JsonResponse({'error': str(e)}, status=500)
-
 
 # =========================
 # 📊 STUB FUNCTIONS (TODO)
