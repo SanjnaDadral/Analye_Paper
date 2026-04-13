@@ -1,6 +1,7 @@
 <!doctype html>
 {% load static %}
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,143 +9,208 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'font-awesome/css/all.min.css' %}">
+  <!-- <link rel="stylesheet" href="{% static 'font-awesome/css/all.min.css' %}"> -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     :root {
       --primary: #6366f1;
       --primary-dark: #4f46e5;
       --secondary: #ec4899;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: 'Poppins', sans-serif; 
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
       background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #ede9fe 100%);
-      min-height: 100vh; 
-      display: flex; 
-      align-items: center; 
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
       justify-content: center;
       padding: 2rem 1rem;
     }
-    .login-container { width: 100%; max-width: 420px; }
-    .login-card { 
-      background: white; 
-      border-radius: 20px; 
-      padding: 2.5rem; 
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 20px;
+      padding: 2.5rem;
       box-shadow: 0 10px 40px rgba(99, 102, 241, 0.15);
       border: 1px solid rgba(99, 102, 241, 0.1);
     }
-    .login-header { text-align: center; margin-bottom: 2rem; }
-    .brand { 
-      display: inline-flex; 
-      align-items: center; 
-      gap: 0.5rem; 
-      font-size: 1.75rem; 
-      font-weight: 700; 
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.75rem;
+      font-weight: 700;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       margin-bottom: 0.5rem;
     }
-    .brand i { 
-      font-size: 2rem; 
+
+    .brand i {
+      font-size: 2rem;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .login-header h2 { 
-      font-size: 1.5rem; 
-      color: #1e293b; 
-      margin-bottom: 0.5rem; 
+
+    .login-header h2 {
+      font-size: 1.5rem;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
     }
-    .login-header p { color: #64748b; font-size: 0.9rem; }
-    .form-group { margin-bottom: 1.25rem; }
-    .form-group label { 
-      display: block; 
-      margin-bottom: 0.5rem; 
-      font-weight: 500; 
-      color: #334155; 
-      font-size: 0.9rem; 
+
+    .login-header p {
+      color: #64748b;
+      font-size: 0.9rem;
     }
-    .form-group input { 
-      width: 100%; 
-      padding: 0.875rem 1rem; 
-      border: 2px solid #e2e8f0; 
-      border-radius: 10px; 
-      font-size: 0.95rem; 
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #334155;
+      font-size: 0.9rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.95rem;
       transition: all 0.2s;
       font-family: 'Poppins', sans-serif;
     }
-    .form-group input:focus { 
-      outline: none; 
-      border-color: var(--primary); 
-      box-shadow: 0 0 0 4px rgba(99,102,241,0.1); 
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
     }
-    .btn-login { 
-      width: 100%; 
-      padding: 0.875rem; 
+
+    .btn-login {
+      width: 100%;
+      padding: 0.875rem;
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white; 
-      border: none; 
-      border-radius: 10px; 
-      font-weight: 600; 
-      cursor: pointer; 
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
       transition: all 0.2s;
       font-size: 1rem;
       font-family: 'Poppins', sans-serif;
     }
-    .btn-login:hover { 
-      transform: translateY(-2px); 
-      box-shadow: 0 8px 20px rgba(99,102,241,0.3); 
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
     }
+
     .btn-login:disabled {
       opacity: 0.7;
       cursor: not-allowed;
     }
-    .forgot-link { 
-      display: block; 
-      text-align: right; 
-      margin-bottom: 1.5rem; 
-      color: var(--primary); 
-      font-size: 0.85rem; 
-      text-decoration: none; 
+
+    .forgot-link {
+      display: block;
+      text-align: right;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+      font-size: 0.85rem;
+      text-decoration: none;
     }
-    .forgot-link:hover { text-decoration: underline; }
-    .divider { 
-      display: flex; 
-      align-items: center; 
-      margin: 1.5rem 0; 
-      color: #94a3b8; 
-      font-size: 0.85rem; 
+
+    .forgot-link:hover {
+      text-decoration: underline;
     }
-    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
-    .divider span { padding: 0 1rem; }
-    .register-link { text-align: center; color: #64748b; font-size: 0.9rem; }
-    .register-link a { color: var(--primary); font-weight: 600; text-decoration: none; }
-    .register-link a:hover { text-decoration: underline; }
-    .alert { 
-      padding: 0.875rem 1rem; 
-      border-radius: 10px; 
-      margin-bottom: 1rem; 
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 1.5rem 0;
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+    .divider span {
+      padding: 0 1rem;
+    }
+
+    .register-link {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+
+    .register-link a {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+
+    .alert {
+      padding: 0.875rem 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
       font-size: 0.9rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
-    .alert-error { 
-      background: #fef2f2; 
-      color: #991b1b; 
-      border: 1px solid #fecaca; 
+
+    .alert-error {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
     }
-    .alert-success { 
-      background: #f0fdf4; 
-      color: #166534; 
-      border: 1px solid #bbf7d0; 
+
+    .alert-success {
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
     }
+
     .input-icon {
       position: relative;
     }
+
     .input-icon i {
       position: absolute;
       left: 1rem;
@@ -152,11 +218,13 @@
       transform: translateY(-50%);
       color: #94a3b8;
     }
+
     .input-icon input {
       padding-left: 2.75rem;
     }
   </style>
 </head>
+
 <body>
   <div class="login-container">
     <div class="login-card">
@@ -178,7 +246,8 @@
           <label for="id_username"><i class="fas fa-envelope me-2"></i>Email or Username</label>
           <div class="input-icon">
             <i class="fas fa-envelope"></i>
-            <input type="text" name="username" id="id_username" placeholder="Enter your email or username" required autofocus>
+            <input type="text" name="username" id="id_username" placeholder="Enter your email or username" required
+              autofocus>
           </div>
         </div>
         <div class="form-group">
@@ -197,4 +266,5 @@
     </div>
   </div>
 </body>
+
 </html>
