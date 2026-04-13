@@ -11,11 +11,17 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-change-in-producti
 
 # ✅ FIXED: use env
 DEBUG = False
+ALLOWED_HOSTS = [
+    'research-12.onrender.com',
+    'localhost',
+    '127.0.0.1'
+]
+# DEBUG = False
 
-ALLOWED_HOSTS = ["research-12.onrender.com"]
+# ALLOWED_HOSTS = ["research-13.onrender.com"]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://research-12.onrender.com"
+    "https://research-13.onrender.com"
 ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -38,16 +44,16 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'analyzer.middleware.rate_limit_middleware',
-]
+                    'django.middleware.security.SecurityMiddleware',
+                    'whitenoise.middleware.WhiteNoiseMiddleware',
+                    
+                    'django.contrib.sessions.middleware.SessionMiddleware',
+                    'django.middleware.common.CommonMiddleware',
+                    'django.middleware.csrf.CsrfViewMiddleware',
+                    'django.contrib.auth.middleware.AuthenticationMiddleware',
+                    'django.contrib.messages.middleware.MessageMiddleware',
+                    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    ]
 
 ROOT_URLCONF = 'paper_analyzer.urls'
 
@@ -87,9 +93,16 @@ USE_I18N = True
 USE_TZ = True
 
 # ✅ STATIC
+# STATIC_URL = '/static/'
+# STATICFILES_DIRS = [BASE_DIR / 'static']
+# STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 # ✅ FIXED MEDIA
 MEDIA_URL = '/media/'
@@ -179,6 +192,8 @@ LOGGING = {
         'level': 'WARNING',
     },
 }
+
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # WhiteNoise
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
