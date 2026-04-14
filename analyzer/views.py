@@ -28,6 +28,8 @@ from .ml_model import ml_processor
 from .pdf_processor import get_pdf_processor
 from .url_scraper import url_scraper
 from .export_manager import export_manager
+# from analyzer.utils.groq import analyze_text_with_groq
+from analyzer.rag_utils import analyze_text_with_groq
 
 logger = logging.getLogger(__name__)
 
