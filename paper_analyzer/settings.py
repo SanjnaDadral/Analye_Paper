@@ -2,6 +2,7 @@ import os
 import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
@@ -10,29 +11,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ======================
 # SECURITY
 # ======================
-SECRET_KEY = os.getenv(
-    'SECRET_KEY',
-    'django-insecure-dev-key-change-this'
-)
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured("SECRET_KEY environment variable is not set!")
 
-DEBUG = False # ALWAYS FALSE on Render
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+
+# Dynamic ALLOWED_HOSTS for Render
+RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
 ALLOWED_HOSTS = [
     "research-nraq.onrender.com",
     ".onrender.com",
     "localhost",
     "127.0.0.1",
 ]
-# ALLOWED_HOSTS = [
-#     'Research.onrender.com',
-#     'localhost',
-#     '127.0.0.1'
-# ]
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://research-nraq.onrender.com",]
+    "https://research-nraq.onrender.com",
+    "https://*.onrender.com",
+]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True') == 'True'
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True').lower() == 'true'
 
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
@@ -52,7 +54,7 @@ INSTALLED_APPS = [
 ]
 
 # ======================
-# MIDDLEWARE (IMPORTANT ORDER)
+# MIDDLEWARE
 # ======================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -98,6 +100,7 @@ DATABASES = {
         conn_max_age=600
     )
 }
+
 # ======================
 # AUTH
 # ======================
@@ -123,14 +126,11 @@ USE_I18N = True
 USE_TZ = True
 
 # ======================
-# STATIC FILES (WHITE NOISE FIXED)
+# STATIC FILES
 # ======================
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-STATICFILES_DIRS = [
-    BASE_DIR / 'static'
-]
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ======================
@@ -147,7 +147,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ======================
 # API KEYS
 # ======================
-GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+if not GROQ_API_KEY:
+    raise ImproperlyConfigured(
+        "GROQ_API_KEY environment variable is not set! "
+        "Please add it in Render Dashboard → Environment Variables."
+    )
 
 # ======================
 # REST FRAMEWORK
@@ -172,7 +177,7 @@ REST_FRAMEWORK = {
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@paperyzer.ai')
@@ -186,14 +191,12 @@ LOGS_DIR.mkdir(exist_ok=True)
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-
     'formatters': {
         'verbose': {
             'format': '{levelname} {asctime} {module} {message}',
             'style': '{',
         },
     },
-
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
@@ -206,7 +209,6 @@ LOGGING = {
             'level': 'INFO',
         },
     },
-
     'root': {
         'handlers': ['console', 'file'],
         'level': 'INFO',
@@ -218,12 +220,10 @@ LOGGING = {
 # ======================
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-
-# ⚠️ safer than DENY for many templates
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # ======================
-# FILE UPLOAD LIMIT
+# FILE UPLOAD LIMIT (50MB)
 # ======================
 FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
