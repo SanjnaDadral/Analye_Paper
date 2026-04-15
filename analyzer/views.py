@@ -20,6 +20,9 @@ from django.core.files.storage import default_storage
 from django.conf import settings
 from .rag_utils import rag_pipeline
 from groq import Groq
+# from django.views.decorators.csrf import csrf_exempt
+from django.core.files.uploadedfile import UploadedFile
+
 
 from .models import Document, AnalysisResult, PlagiarismCheck, AnalysisFeedback, ComparisonResult
 from .plagiarism import local_library_similarity
@@ -128,24 +131,40 @@ MAX_PDF_STORE_BYTES = int(os.getenv("MAX_STORE_PDF_MB", "16")) * 1024 * 1024
 
 #     return True, None
 
+# import logging
+
+# logger = logging.getLogger(__name__)
+
+MAX_PDF_UPLOAD_BYTES = 52 * 1024 * 1024  # 52 MB - keep consistent with settings.py
+
 def validate_pdf_file(file):
+    """Validate uploaded PDF file safely"""
     if not file:
+        logger.warning("validate_pdf_file: No file provided")
         return False, "No file provided"
 
-    if not hasattr(file, 'name') or not file.name.lower().endswith('.pdf'):
-        return False, "Only PDF files allowed"
+    # Check if it's a real UploadedFile object
+    if not hasattr(file, 'name') or not hasattr(file, 'size'):
+        logger.warning("validate_pdf_file: Invalid file object")
+        return False, "Invalid file uploaded"
 
-    # ✅ Safe size check
+    # Check extension
+    if not file.name.lower().endswith('.pdf'):
+        logger.warning(f"validate_pdf_file: Not a PDF - filename: {file.name}")
+        return False, "Only PDF files are allowed"
+
+    # Check size
     file_size = getattr(file, 'size', 0)
-
     if file_size == 0:
+        logger.warning("validate_pdf_file: Empty file")
         return False, "Uploaded file is empty"
 
     if file_size > MAX_PDF_UPLOAD_BYTES:
-        return False, "File too large"
+        logger.warning(f"validate_pdf_file: File too large - size: {file_size / (1024*1024):.2f} MB")
+        return False, f"File too large (max {MAX_PDF_UPLOAD_BYTES // (1024*1024)} MB)"
 
+    logger.info(f"validate_pdf_file: File passed validation - {file.name} ({file_size / (1024*1024):.2f} MB)")
     return True, None
-
 # =========================
 # HOME
 # =========================
@@ -161,17 +180,6 @@ def home(request):
 # =========================
 # LOGIN
 # =========================
-# def login_view(request):
-#     if request.user.is_authenticated:
-#         return redirect('dashboard')
-
-#     form = AuthenticationForm(request, data=request.POST or None)
-
-#     if request.method == 'POST' and form.is_valid():
-#         login(request, form.get_user())
-#         return redirect('dashboard')
-
-#     return render(request, 'analyzer/login.html', {'form': form})
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -180,10 +188,21 @@ def login_view(request):
 
     if request.method == 'POST' and form.is_valid():
         login(request, form.get_user())
-        next_url = request.POST.get('next') or request.GET.get('next')
-        return redirect(next_url if next_url else 'dashboard')  # ✅ respects ?next=
+        return redirect('dashboard')
 
     return render(request, 'analyzer/login.html', {'form': form})
+# def login_view(request):
+#     if request.user.is_authenticated:
+#         return redirect('dashboard')
+
+#     form = AuthenticationForm(request, data=request.POST or None)
+
+#     if request.method == 'POST' and form.is_valid():
+#         login(request, form.get_user())
+#         next_url = request.POST.get('next') or request.GET.get('next')
+#         return redirect(next_url if next_url else 'dashboard')  # ✅ respects ?next=
+
+#     return render(request, 'analyzer/login.html', {'form': form})
 # =========================
 # REGISTER
 # =========================
@@ -282,15 +301,26 @@ def logout_view(request):
 #         logger.error(e, exc_info=True)
 #         return JsonResponse({'error': str(e)}, status=500)
 
+from django.views.decorators.csrf import csrf_exempt
+from django.core.files.uploadedfile import UploadedFile
+
+logger = logging.getLogger(__name__)
+
 @csrf_exempt
 def analyze_document(request):
-    """Main document analysis endpoint - Handles PDF and URL input"""
+    """Main document analysis endpoint - Handles PDF upload and URL input"""
     
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Login required'}, status=401)
 
+    # Log incoming request for easier debugging
+    logger.info(f"Analyze request received - Method: {request.method}, Content-Type: {request.content_type}")
+    logger.info(f"POST keys: {list(request.POST.keys())}")
+    logger.info(f"FILES keys: {list(request.FILES.keys())}")
+
     try:
-        input_type = request.POST.get('input_type', 'pdf')
+        input_type = request.POST.get('input_type', 'pdf').strip().lower()
+
         content = None
         title = "Analyzed Document"
         document_input_type = 'pdf'
@@ -300,19 +330,23 @@ def analyze_document(request):
         # 📄 PDF UPLOAD
         # =========================
         if input_type == 'pdf':
-            uploaded_file = request.FILES.get('pdf_file')
+            uploaded_file: UploadedFile = request.FILES.get('pdf_file')
 
             if not uploaded_file:
                 return JsonResponse({'error': 'No PDF file uploaded'}, status=400)
 
-            is_valid, error = validate_pdf_file(uploaded_file)
+            # Validate file
+            is_valid, error_msg = validate_pdf_file(uploaded_file)
             if not is_valid:
-                return JsonResponse({'error': error}, status=400)
+                logger.warning(f"PDF validation failed: {error_msg}")
+                return JsonResponse({'error': error_msg}, status=400)
 
+            # Process PDF
             processor = get_pdf_processor()
             result = processor.extract_text(uploaded_file)
 
             if not result.get('success'):
+                logger.error(f"PDF extraction failed: {result.get('error')}")
                 return JsonResponse({'error': 'Failed to extract text from PDF'}, status=400)
 
             content = result.get('text', '')[:ANALYSIS_TEXT_MAX]
@@ -329,23 +363,23 @@ def analyze_document(request):
             try:
                 result = url_scraper.scrape(url_input)
                 if not result.get('success'):
-                    return JsonResponse({
-                        'error': f'Failed to scrape URL: {result.get("error", "Unknown error")}'
-                    }, status=400)
+                    error = result.get("error", "Unknown error")
+                    logger.warning(f"URL scraping failed: {error}")
+                    return JsonResponse({'error': f'Failed to scrape URL: {error}'}, status=400)
 
                 content = result.get('text', '')[:ANALYSIS_TEXT_MAX]
                 url_source = url_input
                 document_input_type = 'url'
 
             except Exception as e:
-                logger.error(f"URL scraping error: {e}")
+                logger.error(f"URL scraping exception: {e}", exc_info=True)
                 return JsonResponse({'error': f'URL processing failed: {str(e)}'}, status=400)
 
         else:
-            return JsonResponse({'error': 'Invalid input type'}, status=400)
+            return JsonResponse({'error': 'Invalid input type. Use "pdf" or "url"'}, status=400)
 
         # =========================
-        # VALIDATION
+        # CONTENT VALIDATION
         # =========================
         if not content or len(content.strip()) < 30:
             return JsonResponse({
@@ -355,7 +389,7 @@ def analyze_document(request):
         # =========================
         # GENERATE TITLE
         # =========================
-        for line in content.split('\n'):
+        for line in content.splitlines():
             line = line.strip()
             if 5 < len(line) < 200:
                 title = line[:150]
@@ -378,12 +412,12 @@ def analyze_document(request):
         )
 
         # =========================
-        # AI ANALYSIS USING GROQ
+        # AI ANALYSIS
         # =========================
         try:
             analysis_data = analyze_text_with_groq(content)
         except Exception as e:
-            logger.warning(f"Groq analysis failed, using fallback: {e}")
+            logger.warning(f"Groq analysis failed, falling back to ML processor: {e}")
             analysis_data = ml_processor.full_analysis(content)
 
         # =========================
@@ -421,14 +455,17 @@ def analyze_document(request):
             }
         )
 
+        logger.info(f"Document analysis completed successfully for user {request.user.id} - Doc ID: {document.id}")
+
         return JsonResponse({
             'success': True,
             'message': 'Analysis completed successfully',
+            'document_id': document.id,
             'redirect_url': f'/result/{document.id}/'
         })
 
     except Exception as e:
-        logger.error(f"Analyze document error: {e}", exc_info=True)
+        logger.error(f"Unexpected error in analyze_document: {e}", exc_info=True)
         return JsonResponse({
             'error': 'An unexpected error occurred during analysis. Please try again.'
         }, status=500)
