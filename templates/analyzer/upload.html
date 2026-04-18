@@ -1,241 +1,267 @@
-{% extends 'analyzer/base.html' %} {% load static %} {% block title %}Upload
-Paper - PaperAIzer{% endblock %} {% block extra_css %}
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-/>
-
+{% extends 'analyzer/base.html' %}
+{% load static %}
+{% block title %}Analyze Paper - PaperAIzer{% endblock %}
+{% block extra_css %}
 <style>
   .upload-header {
-    background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
     color: white;
-    padding: 2rem;
-    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    border-radius: 20px;
     margin-bottom: 2rem;
     text-align: center;
+    box-shadow: 0 10px 30px rgba(99,102,241,0.25);
   }
+  .upload-header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .upload-header p { opacity: 0.9; margin: 0; }
 
-  .upload-header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
+  .method-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .method-tab {
+    flex: 1; padding: 0.85rem 1rem;
+    border: 2px solid #e2e8f0; background: white;
+    color: #64748b; cursor: pointer; font-weight: 600;
+    transition: all 0.2s; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    font-size: 0.9rem;
   }
+  .method-tab.active {
+    border-color: #6366f1; background: linear-gradient(135deg,rgba(99,102,241,0.08),rgba(236,72,153,0.05));
+    color: #6366f1;
+  }
+  .method-tab:hover:not(.active) { border-color: #a5b4fc; color: #6366f1; }
 
   .upload-zone {
-    border: 3px dashed var(--border-color);
-    border-radius: 12px;
-    padding: 3rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    border: 2px dashed #cbd5e1; border-radius: 14px;
+    padding: 3rem 2rem; text-align: center; cursor: pointer;
+    transition: all 0.25s; background: #f8fafc;
   }
+  .upload-zone:hover { border-color: #6366f1; background: rgba(99,102,241,0.04); }
+  .upload-zone i { font-size: 2.5rem; color: #6366f1; margin-bottom: 0.75rem; display: block; }
+  .upload-zone h5 { font-weight: 700; color: #1e293b; margin-bottom: 0.4rem; }
+  .upload-zone p { color: #64748b; margin: 0; font-size: 0.9rem; }
 
-  .upload-zone:hover {
-    border-color: #6366f1;
-    background: rgba(99, 102, 241, 0.05);
+  .url-input-group { display: flex; gap: 0.75rem; align-items: stretch; }
+  .url-input-group input {
+    flex: 1; padding: 0.85rem 1rem;
+    border: 2px solid #e2e8f0; border-radius: 12px;
+    font-size: 0.95rem; transition: border-color 0.2s;
+    background: white; color: #1e293b;
   }
+  .url-input-group input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .url-input-group input::placeholder { color: #94a3b8; }
 
   .file-selected {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: rgba(16, 185, 129, 0.1);
-    border-radius: 8px;
-    display: none;
+    margin-top: 1rem; padding: 0.9rem 1rem;
+    background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 10px; color: #065f46; font-weight: 600;
+    display: flex; align-items: center; gap: 0.5rem;
   }
 
-  .form-message {
-    margin-top: 1rem;
-    padding: 1rem;
-    border-radius: 8px;
-    display: none;
+  .info-card {
+    background: white; border: 1px solid #e2e8f0;
+    border-radius: 14px; padding: 1.5rem;
   }
-
-  .form-message.error {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
+  .info-card h6 {
+    font-weight: 700; margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    color: #1e293b;
   }
+  .info-card ul { margin: 0; padding-left: 1.25rem; color: #475569; font-size: 0.9rem; }
+  .info-card li { margin-bottom: 0.4rem; }
 
-  .form-message.success {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
+  /* Four boxes */
+  .four-boxes { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+  .four-boxes .box {
+    width: 90px; height: 90px; background: white;
+    border: 2px solid #e2e8f0; border-radius: 14px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.4rem; transition: all 0.3s; opacity: 0.4;
   }
+  .four-boxes .box i { font-size: 1.5rem; color: #94a3b8; }
+  .four-boxes .box span { font-size: 0.75rem; font-weight: 600; color: #94a3b8; }
+  .four-boxes .box.active { opacity: 1; border-color: #6366f1; background: rgba(99,102,241,0.06); animation: pulse-box 1s ease-in-out infinite; }
+  .four-boxes .box.active i, .four-boxes .box.active span { color: #6366f1; }
+  .four-boxes .box.completed { opacity: 1; border-color: #10b981; background: rgba(16,185,129,0.06); }
+  .four-boxes .box.completed i, .four-boxes .box.completed span { color: #10b981; }
+  @keyframes pulse-box { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
 
-  .loading {
-    opacity: 0.7;
-    pointer-events: none;
+
+
+  @media (max-width: 576px) {
+    .method-tabs { flex-direction: column; }
+    .url-input-group { flex-direction: column; }
+    .upload-zone { padding: 2rem 1rem; }
   }
 </style>
-{% endblock %} {% block content %}
+{% endblock %}
+
+{% block content %}
 <div class="container py-4">
   <div class="upload-header">
-    <h1><i class="fas fa-cloud-upload-alt me-2"></i>Upload Research Paper</h1>
-    <p>Choose how to provide your research paper for analysis</p>
+    <h1><i class="fas fa-microscope me-2"></i>Analyze Research Paper</h1>
+    <p>Upload a PDF or paste a URL to get AI-powered analysis instantly</p>
   </div>
 
   <div class="row">
-    <div class="col-lg-8 mx-auto">
-      <div class="card">
+    <div class="col-lg-7 mx-auto">
+      <div class="card shadow-sm" style="border-radius:18px; border:1px solid var(--border-color); background: var(--bg-card);">
         <div class="card-body p-4">
           <form id="analyzeForm" enctype="multipart/form-data">
-            <input type="hidden" name="input_type" value="pdf" />
+            {% csrf_token %}
+            <input type="hidden" name="input_type" id="inputType" value="pdf">
 
-            <!-- PDF Upload Zone -->
-            <div class="upload-zone" id="uploadZone">
-              <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
-              <h5>Drag and drop your PDF here</h5>
-              <p>or click to browse (max 50MB)</p>
-            </div>
-
-            <input
-              type="file"
-              id="pdfFile"
-              name="pdf_file"
-              accept=".pdf"
-              hidden
-            />
-
-            <!-- Selected File -->
-            <div class="file-selected" id="fileSelected"></div>
-
-            <!-- Messages -->
-            <div id="errorMessage" class="form-message error"></div>
-            <div id="successMessage" class="form-message success"></div>
-
-            <!-- Submit Button -->
-            <div class="text-center mt-4">
-              <button
-                type="submit"
-                id="analyzeBtn"
-                class="btn btn-primary-custom"
-              >
-                <i class="fas fa-magic me-2"></i>Analyze Paper
+            <!-- Tabs -->
+            <div class="method-tabs">
+              <button type="button" class="method-tab active" id="tab-pdf" onclick="switchTab('pdf')">
+                <i class="fas fa-file-pdf"></i> PDF Upload
+              </button>
+              <button type="button" class="method-tab" id="tab-url" onclick="switchTab('url')">
+                <i class="fas fa-globe"></i> URL / Link
               </button>
             </div>
+
+            <!-- PDF Panel -->
+            <div id="panel-pdf">
+              <div class="upload-zone" id="uploadZone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h5>Drag & drop your PDF here</h5>
+                <p>or click to browse — max 45 MB</p>
+              </div>
+              <input type="file" id="pdfFile" name="pdf_file" accept=".pdf" style="display:none">
+              <div class="file-selected" id="fileSelected" style="display:none">
+                <i class="fas fa-check-circle"></i>
+                <span id="fileName"></span>
+                <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="removeFile()">
+                  <i class="fas fa-times"></i> Remove
+                </button>
+              </div>
+            </div>
+
+            <!-- URL Panel -->
+            <div id="panel-url" style="display:none">
+              <label class="form-label fw-600 mb-2" style="color:#1e293b;">
+                <i class="fas fa-link me-1 text-primary"></i> Paper URL or DOI
+              </label>
+              <div class="url-input-group">
+                <input type="url" id="urlInput" name="url_input"
+                  placeholder="https://arxiv.org/abs/... or https://doi.org/...">
+              </div>
+              <div class="mt-2" style="font-size:.82rem;color:#64748b;">
+                <i class="fas fa-info-circle me-1"></i>
+                Supports: arXiv, ResearchGate, PubMed, DOI links, and most academic paper pages.
+              </div>
+            </div>
+
+            <!-- Error / Success -->
+            <div id="errorMessage" class="mt-3 p-3 rounded-3" style="display:none;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;"></div>
+            <div id="successMessage" class="mt-3 p-3 rounded-3" style="display:none;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;"></div>
+
+            <!-- Submit -->
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-primary-custom px-5 py-2" id="submitBtn" style="min-width:200px;border-radius:12px;">
+                <i class="fas fa-wand-magic-sparkles me-2"></i>Analyze Paper
+              </button>
+            </div>
+
+            <!-- Progress animation -->
+            <div id="fourBoxesAnimation" style="display:none;margin-top:2rem;text-align:center;">
+              <p class="text-muted small mb-3">AI is analyzing your paper...</p>
+              <div class="four-boxes">
+                <div class="box box-1"><i class="fas fa-file-import"></i><span>Extracting</span></div>
+                <div class="box box-2"><i class="fas fa-brain"></i><span>Analyzing</span></div>
+                <div class="box box-3"><i class="fas fa-search"></i><span>Checking</span></div>
+                <div class="box box-4"><i class="fas fa-check-circle"></i><span>Complete</span></div>
+              </div>
+            </div>
           </form>
+        </div>
+      </div>
+
+      <!-- Info cards -->
+      <div class="row g-3 mt-3">
+        <div class="col-md-6">
+          <div class="info-card">
+            <h6><i class="fas fa-check-circle text-success"></i> What We Extract</h6>
+            <ul>
+              <li>Summary & Abstract</li>
+              <li>Keywords & Technologies</li>
+              <li>Methodology & Approach</li>
+              <li>Authors & Publication Year</li>
+              <li>References & Links</li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="info-card">
+            <h6><i class="fas fa-bolt text-primary"></i> Features</h6>
+            <ul>
+              <li>AI-Powered Analysis (Groq)</li>
+              <li>Plagiarism Detection</li>
+              <li>Export PDF / TXT / JSON</li>
+              <li>Citation Generation</li>
+              <li>Q&A About the Paper</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-{% endblock %} {% block extra_js %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/analysis_handler.js' %}"></script>
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const uploadZone = document.getElementById("uploadZone");
-    const fileInput = document.getElementById("pdfFile");
-    const fileSelected = document.getElementById("fileSelected");
-    const form = document.getElementById("analyzeForm");
-    const errorBox = document.getElementById("errorMessage");
-    const successBox = document.getElementById("successMessage");
-    const analyzeBtn = document.getElementById("analyzeBtn");
+function switchTab(tab) {
+  document.getElementById('panel-pdf').style.display = tab === 'pdf' ? 'block' : 'none';
+  document.getElementById('panel-url').style.display = tab === 'url' ? 'block' : 'none';
+  document.getElementById('tab-pdf').classList.toggle('active', tab === 'pdf');
+  document.getElementById('tab-url').classList.toggle('active', tab === 'url');
+  document.getElementById('inputType').value = tab;
+}
 
-    // Click to upload
-    uploadZone.addEventListener("click", () => fileInput.click());
+document.addEventListener('DOMContentLoaded', function() {
+  const uploadZone = document.getElementById('uploadZone');
+  const pdfFile = document.getElementById('pdfFile');
+  const fileSelected = document.getElementById('fileSelected');
+  const fileName = document.getElementById('fileName');
 
-    // File selected via click
-    fileInput.addEventListener("change", function () {
-      handleFileSelection(this.files[0]);
-    });
+  uploadZone.addEventListener('click', () => pdfFile.click());
 
-    // Drag and Drop
-    uploadZone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      uploadZone.style.borderColor = "#6366f1";
-    });
-
-    uploadZone.addEventListener("dragleave", () => {
-      uploadZone.style.borderColor = "";
-    });
-
-    uploadZone.addEventListener("drop", function (e) {
-      e.preventDefault();
-      uploadZone.style.borderColor = "";
-      handleFileSelection(e.dataTransfer.files[0]);
-    });
-
-    function handleFileSelection(file) {
-      if (!file) return;
-
-      if (file.type !== "application/pdf") {
-        showError("Only PDF files are allowed.");
-        return;
-      }
-
-      if (file.size > 50 * 1024 * 1024) {
-        showError("File is too large. Maximum size is 50MB.");
-        return;
-      }
-
-      fileSelected.style.display = "block";
-      fileSelected.innerHTML = `
-      <strong>Selected:</strong> ${file.name} 
-      <small>(${(file.size / (1024 * 1024)).toFixed(2)} MB)</small>
-    `;
-      errorBox.style.display = "none";
-    }
-
-    function showError(msg) {
-      errorBox.style.display = "block";
-      errorBox.innerText = msg;
-      successBox.style.display = "none";
-    }
-
-    function showSuccess(msg) {
-      successBox.style.display = "block";
-      successBox.innerText = msg;
-      errorBox.style.display = "none";
-    }
-
-    // ==================== FORM SUBMIT (AJAX) ====================
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      const file = fileInput.files[0];
-
-      if (!file) {
-        showError("Please select a PDF file to analyze.");
-        return;
-      }
-
-      // Disable button + loading state
-      analyzeBtn.disabled = true;
-      analyzeBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...`;
-      document.getElementById("uploadZone").classList.add("loading");
-
-      errorBox.style.display = "none";
-      successBox.style.display = "none";
-
-      const formData = new FormData();
-      formData.append("input_type", "pdf");
-      formData.append("pdf_file", file);
-
-      try {
-        const response = await fetch("{% url 'analyze_document' %}", {
-          method: "POST",
-          body: formData,
-          credentials: "include", // Important for session authentication
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          showSuccess(data.message || "Analysis started successfully!");
-
-          // Redirect after short delay
-          setTimeout(() => {
-            window.location.href = data.redirect_url;
-          }, 1200);
-        } else {
-          showError(data.error || "Analysis failed. Please try again.");
-        }
-      } catch (err) {
-        console.error("Fetch error:", err);
-        showError("Network error. Please check your connection and try again.");
-      } finally {
-        // Reset button
-        analyzeBtn.disabled = false;
-        analyzeBtn.innerHTML = `<i class="fas fa-magic me-2"></i>Analyze Paper`;
-        document.getElementById("uploadZone").classList.remove("loading");
-      }
-    });
+  pdfFile.addEventListener('change', function() {
+    if (this.files[0]) showFile(this.files[0]);
   });
+
+  uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.style.borderColor = '#6366f1';
+    uploadZone.style.background = 'rgba(99,102,241,0.05)';
+  });
+  uploadZone.addEventListener('dragleave', () => {
+    uploadZone.style.borderColor = '#cbd5e1';
+    uploadZone.style.background = '#f8fafc';
+  });
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.style.borderColor = '#cbd5e1';
+    uploadZone.style.background = '#f8fafc';
+    if (e.dataTransfer.files[0]) {
+      pdfFile.files = e.dataTransfer.files;
+      showFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  function showFile(file) {
+    fileSelected.style.display = 'flex';
+    fileName.textContent = file.name + ' (' + (file.size/1024/1024).toFixed(2) + ' MB)';
+    uploadZone.style.display = 'none';
+  }
+
+  window.removeFile = function() {
+    pdfFile.value = '';
+    fileSelected.style.display = 'none';
+    uploadZone.style.display = 'block';
+  };
+});
 </script>
 {% endblock %}

@@ -91,6 +91,45 @@ class CustomRegistrationForm(UserCreationForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if User.objects.filter(email__iexact=email).exists():
+        if not email:
+            raise forms.ValidationError("Email is required.")
+        email = email.lower()
+        # Check both email field and username field (username == email in this app)
+        if User.objects.filter(email__iexact=email).exists() or \
+           User.objects.filter(username__iexact=email).exists():
             raise forms.ValidationError("An account with this email already exists.")
-        return email.lower()
+        return email
+
+    def clean_username(self):
+        # username is derived from email in save() — skip UserCreationForm's username validation
+        return self.cleaned_data.get('username', '')
+
+
+class EmailLoginForm(forms.Form):
+    email = forms.EmailField(
+        label="Email",
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter your email address'})
+    )
+    password = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter your password'})
+    )
+
+    def __init__(self, request=None, *args, **kwargs):
+        self.request = request
+        self.user_cache = None
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        email = self.cleaned_data.get('email')
+        password = self.cleaned_data.get('password')
+        if email and password:
+            from django.contrib.auth import authenticate
+            user = authenticate(request=self.request, username=email, password=password)
+            if user is None:
+                raise forms.ValidationError("Invalid email or password.")
+            self.user_cache = user
+        return self.cleaned_data
+
+    def get_user(self):
+        return self.user_cache

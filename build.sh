@@ -5,27 +5,41 @@ set -o errexit
 echo "========================================="
 echo "PaperAIzer Build Script for Render"
 echo "========================================="
-echo ""
 
+echo ""
 echo "=== Step 1: Installing Python dependencies ==="
-if pip install -r requirements.txt; then
-    echo "✓ Dependencies installed successfully"
-else
-    echo "✗ Failed to install dependencies"
-    exit 1
-fi
+pip install -r requirements.txt
+echo "✓ Dependencies installed"
 
 echo ""
-echo "=== Step 2: Collecting static files ==="
-if python manage.py collectstatic --no-input --clear 2>&1; then
-    echo "✓ Static files collected"
-else
-    echo "⚠ Static file collection had issues (continuing...)"
-fi
+echo "=== Step 2: Running database migrations ==="
+python manage.py migrate --no-input
+echo "✓ Migrations applied"
+
+echo ""
+echo "=== Step 3: Collecting static files ==="
+python manage.py collectstatic --no-input --clear
+echo "✓ Static files collected"
+
+echo ""
+echo "=== Step 4: Downloading NLTK data ==="
+python -c "
+import nltk
+import ssl
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+nltk.download('punkt', quiet=True)
+nltk.download('punkt_tab', quiet=True)
+nltk.download('stopwords', quiet=True)
+print('NLTK data downloaded')
+"
+echo "✓ NLTK data ready"
 
 echo ""
 echo "========================================="
-echo "✓ Build script completed!"
+echo "✓ Build complete!"
 echo "========================================="
-echo ""
-echo "NOTE: Database migrations will run in Procfile release phase"

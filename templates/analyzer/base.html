@@ -11,7 +11,6 @@
   <title>
     {% block title %}PaperAIzer - AI Research Paper Analyzer{% endblock %}
   </title>
-  <link rel="icon" href="{% static 'images/favicon.ico' %}">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -232,11 +231,13 @@
   <nav class="navbar navbar-expand-lg">
     <div class="container-fluid px-4">
       <!-- Logo -->
-      <a class="navbar-brand" href="{% url 'home' %}">
-        <div class="brand-icon">
+      <a class="navbar-brand-custom" href="{% url 'home' %}">
+        <div class="brand-icon-wrapper">
           <i class="fas fa-brain"></i>
         </div>
-        <span class="brand-text">Paper<span class="brand-accent">AI</span>zer</span>
+        <span class="brand-logo-text">
+          Paper<span class="brand-logo-accent">AI</span>zer
+        </span>
       </a>
 
       <!-- Mobile Toggle -->
@@ -278,14 +279,17 @@
             <button class="nav-link profile-toggle" onclick="toggleProfileDropdown(event)"
               style="border: none; background: transparent;">
               <div class="user-avatar">
-                {{ user.username|make_list|first|upper }}
+                {% if user.first_name %}{{ user.first_name|make_list|first|upper }}{% else %}{{ user.username|make_list|first|upper }}{% endif %}
               </div>
-              <span>{{ user.username }}</span>
+              <span class="d-none d-md-inline">{% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}</span>
               <i class="fas fa-chevron-down" style="font-size: 0.7rem"></i>
             </button>
             <div class="dropdown-menu-profile" id="profileDropdown">
+              <a href="{% url 'profile' %}" class="dropdown-item-profile">
+                <i class="fas fa-user-circle"></i>My Profile
+              </a>
               <a href="{% url 'dashboard' %}" class="dropdown-item-profile">
-                <i class="fas fa-grip"></i>Dashboard
+                <i class="fas fa-chart-line"></i>Dashboard
               </a>
               <a href="{% url 'library' %}" class="dropdown-item-profile">
                 <i class="fas fa-folder"></i>My Library
@@ -296,7 +300,7 @@
               <form method="post" action="{% url 'logout' %}" class="d-block">
                 {% csrf_token %}
                 <button type="submit" class="dropdown-item-profile w-100 text-start"
-                  style="background: none; border: none">
+                  style="background:none;border:none;color:#dc2626;">
                   <i class="fas fa-sign-out-alt"></i>Logout
                 </button>
               </form>

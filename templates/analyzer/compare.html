@@ -2,12 +2,15 @@
 Papers - PaperAIzer{% endblock %} {% block extra_css %}
 <style>
   .compare-header {
-    background: linear-gradient(135deg, #6366f1, #ec4899);
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
     color: white;
     padding: 2rem;
     border-radius: 16px;
     margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
   }
+  .compare-header h1 { color: white !important; }
+  .compare-header p { color: rgba(255,255,255,0.9) !important; }
 
   .compare-card {
     background: white;
@@ -174,6 +177,8 @@ Papers - PaperAIzer{% endblock %} {% block extra_css %}
     padding: 2rem;
     color: #9ca3af;
   }
+
+
 </style>
 {% endblock %} {% block content %}
 <div class="container">

@@ -49,17 +49,17 @@
   }
 
   .section-card {
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
   }
 
   .section-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--text-primary);
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
@@ -91,11 +91,11 @@
   }
 
   .stat-item {
-    background: #f8fafc;
+    background: var(--bg-secondary);
     padding: 1rem;
     border-radius: 10px;
     text-align: center;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
   }
 
   .stat-value {
@@ -178,10 +178,10 @@
 
   .extracted-image-card .image-info {
     padding: 0.75rem;
-    background: #ffffff;
+    background: var(--bg-card);
     text-align: center;
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--text-muted);
   }
 
   .reference-list {
@@ -239,11 +239,11 @@
   }
 
   .feedback-card {
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
   }
 
   .feedback-title {
@@ -354,21 +354,35 @@
       {% if analysis.model_used %}<span class="badge bg-info me-2" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">
         <i class="fas fa-brain me-1"></i>{{ analysis.model_used }}
       </span>{% endif %}
-      <button class="btn btn-light" onclick="exportDoc('pdf')">
-        <i class="fas fa-file-pdf me-2"></i>PDF
-      </button>
-      <button class="btn btn-light" onclick="exportDoc('txt')">
-        <i class="fas fa-file-alt me-2"></i>TXT
-      </button>
+      {% if document.is_batch or "batch" in document.title|lower %}
+      <span class="badge bg-warning text-dark me-2" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">
+        <i class="fas fa-layer-group me-1"></i>Batch Mode Enabled
+      </span>
+      {% endif %}
+
+      <!-- Export dropdown with format selector -->
+      <div class="dropdown d-inline-block">
+        <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+          <i class="fas fa-download me-1"></i> Export
+        </button>
+        <ul class="dropdown-menu">
+          <li><h6 class="dropdown-header">Download with Citation</h6></li>
+          <li><a class="dropdown-item" href="{% url 'export' document.id 'pdf' %}"><i class="fas fa-file-pdf me-2 text-danger"></i>PDF Report</a></li>
+          <li><a class="dropdown-item" href="{% url 'export' document.id 'txt' %}"><i class="fas fa-file-alt me-2 text-primary"></i>Text File</a></li>
+          <li><a class="dropdown-item" href="{% url 'export' document.id 'csv' %}"><i class="fas fa-file-csv me-2 text-success"></i>CSV Spreadsheet</a></li>
+          <li><a class="dropdown-item" href="{% url 'export' document.id 'json' %}"><i class="fas fa-file-code me-2 text-warning"></i>JSON Data</a></li>
+        </ul>
+      </div>
+
       <button class="btn btn-light" onclick="openEmailModal()">
-        <i class="fas fa-envelope me-2"></i>Email
+        <i class="fas fa-envelope me-1"></i>Email
       </button>
       <button class="btn btn-light" onclick="window.print()">
-        <i class="fas fa-print me-2"></i>Print
+        <i class="fas fa-print me-1"></i>Print
       </button>
-      <a href="{% url 'home' %}" class="btn btn-light"><i class="fas fa-plus me-2"></i>New Analysis</a>
+      <a href="{% url 'upload' %}" class="btn btn-light"><i class="fas fa-plus me-1"></i>New</a>
       <button class="btn btn-danger" data-doc-id="{{ document.id }}" data-doc-title="{{ document.title|escapejs }}" onclick="handleDelete(this)">
-        <i class="fas fa-trash me-2"></i>Delete
+        <i class="fas fa-trash me-1"></i>Delete
       </button>
     </div>
   </div>
@@ -386,6 +400,37 @@
         <div class="empty-section">
           <i class="fas fa-search"></i>
           <p>No abstract found in this document</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Citation Section -->
+      {% if analysis %}
+      <div class="section-card" style="border-left:4px solid #6366f1;">
+        <h5 class="section-title"><i class="fas fa-quote-right"></i> Citation</h5>
+        <div class="mb-3">
+          <div class="d-flex gap-2 mb-2 flex-wrap">
+            <button class="btn btn-sm btn-outline-primary active" onclick="showCitation('apa',this)" id="btn-apa">APA</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="showCitation('mla',this)" id="btn-mla">MLA</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="showCitation('chicago',this)" id="btn-chicago">Chicago</button>
+          </div>
+          {% with authors=analysis.authors year=analysis.publication_year title=document.title %}
+          {% with author_str=authors|join:", " %}
+          <div id="citation-apa" class="citation-box p-3 rounded-3" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:.88rem;line-height:1.7;font-family:Georgia,serif;">
+            {% if authors %}{{ author_str }}{% else %}Unknown Author{% endif %} ({% if year %}{{ year }}{% else %}n.d.{% endif %}). <em>{{ title }}</em>.{% if document.url %} Retrieved from {{ document.url }}{% endif %}
+          </div>
+          <div id="citation-mla" class="citation-box p-3 rounded-3" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;font-size:.88rem;line-height:1.7;font-family:Georgia,serif;">
+            {% if authors %}{{ authors.0 }}{% else %}Unknown{% endif %}. "{{ title }}." {% if year %}{{ year }}{% endif %}.{% if document.url %} Web. {{ document.url }}{% endif %}
+          </div>
+          <div id="citation-chicago" class="citation-box p-3 rounded-3" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;font-size:.88rem;line-height:1.7;font-family:Georgia,serif;">
+            {% if authors %}{{ author_str }}{% else %}Unknown{% endif %}. "{{ title }}." {% if year %}{{ year }}{% endif %}.{% if document.url %} {{ document.url }}{% endif %}
+          </div>
+          {% endwith %}
+          {% endwith %}
+          <button class="btn btn-sm btn-outline-secondary mt-2" onclick="copyCitation()">
+            <i class="fas fa-copy me-1"></i>Copy Citation
+          </button>
+          <span id="copyConfirm" style="display:none;color:#10b981;font-size:.82rem;margin-left:.5rem;"><i class="fas fa-check me-1"></i>Copied!</span>
         </div>
       </div>
       {% endif %}
@@ -505,7 +550,7 @@
       {% endif %}
       {% endwith %}
       {% with refs=analysis.references %}
-      {% if refs %}
+      {% if refs and refs|length >= 3 %}
       <div class="section-card">
         <h5 class="section-title">
           <i class="fas fa-book"></i> References
@@ -717,12 +762,14 @@
             </div>
             <div class="stat-label">Keywords</div>
           </div>
+          {% if analysis.references|length >= 3 %}
           <div class="stat-item">
             <div class="stat-value">
-              {{ analysis.references|length|default:0 }}
+              {{ analysis.references|length }}
             </div>
             <div class="stat-label">References</div>
           </div>
+          {% endif %}
         </div>
       </div>
       {% endif %}
@@ -796,6 +843,23 @@
         "placeholder",
         format,
       );
+  }
+
+  // Citation functions
+  function showCitation(style, btn) {
+    document.querySelectorAll('.citation-box').forEach(el => el.style.display = 'none');
+    document.getElementById('citation-' + style).style.display = 'block';
+    document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  function copyCitation() {
+    const visible = document.querySelector('.citation-box:not([style*="display:none"])') ||
+                    document.getElementById('citation-apa');
+    navigator.clipboard.writeText(visible ? visible.innerText : '').then(() => {
+      const c = document.getElementById('copyConfirm');
+      c.style.display = 'inline';
+      setTimeout(() => c.style.display = 'none', 2500);
+    });
   }
 
   function openEmailModal() {

@@ -14,7 +14,6 @@ from django.db.models import Q, Avg
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.core.files.storage import default_storage
 from django.conf import settings
@@ -26,7 +25,7 @@ from django.core.files.uploadedfile import UploadedFile
 
 from .models import Document, AnalysisResult, PlagiarismCheck, AnalysisFeedback, ComparisonResult
 from .plagiarism import local_library_similarity
-from .forms import DocumentUploadForm, CustomRegistrationForm
+from .forms import DocumentUploadForm, CustomRegistrationForm, EmailLoginForm
 from .ml_model import ml_processor
 from .pdf_processor import get_pdf_processor
 from .url_scraper import url_scraper
@@ -36,7 +35,7 @@ from analyzer.rag_utils import analyze_text_with_groq
 
 logger = logging.getLogger(__name__)
 
-ANALYSIS_TEXT_MAX = int(os.getenv("ANALYSIS_TEXT_CAP", "50000"))
+ANALYSIS_TEXT_MAX = int(os.getenv("ANALYSIS_TEXT_CAP", "5000"))
 TITLE_SAMPLE_CHARS = int(os.getenv("TITLE_SAMPLE_CHARS", "12000"))
 MAX_PDF_UPLOAD_BYTES = int(os.getenv("MAX_PDF_UPLOAD_MB", "45")) * 1024 * 1024
 MAX_PDF_STORE_BYTES = int(os.getenv("MAX_STORE_PDF_MB", "16")) * 1024 * 1024
@@ -180,16 +179,11 @@ def home(request):
 # =========================
 # LOGIN
 # =========================
-from django.shortcuts import render, redirect
-from django.contrib.auth import login
-from django.contrib.auth.forms import AuthenticationForm
-
-
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
 
-    form = AuthenticationForm(request, data=request.POST or None)
+    form = EmailLoginForm(request, data=request.POST or None)
 
     if request.method == 'POST':
         if form.is_valid():
@@ -252,9 +246,13 @@ def register_view(request):
     form = CustomRegistrationForm(request.POST or None)
 
     if request.method == 'POST' and form.is_valid():
-        user = form.save()
-        login(request, user)
-        return redirect('dashboard')
+        try:
+            from django.db import IntegrityError
+            user = form.save()
+            login(request, user)
+            return redirect('dashboard')
+        except IntegrityError:
+            form.add_error('email', 'An account with this email already exists.')
 
     return render(request, 'analyzer/register.html', {'form': form})
 
@@ -554,11 +552,69 @@ def analyze_document(request):
 
 @login_required
 def profile(request):
-    """User profile page"""
+    """User profile page with edit functionality"""
+    from .models import UserProfile, AnalysisResult, PlagiarismCheck
+    from django.db.models import Sum, Avg
+    from collections import Counter
+
+    user = request.user
+    profile_obj, _ = UserProfile.objects.get_or_create(user=user)
+
     if request.method == 'POST':
-        # TODO: Update profile logic
-        pass
-    return render(request, 'analyzer/profile.html')
+        # Update User fields
+        user.first_name = request.POST.get('first_name', user.first_name).strip()
+        user.last_name = request.POST.get('last_name', user.last_name).strip()
+        new_email = request.POST.get('email', user.email).strip().lower()
+
+        if new_email != user.email:
+            if User.objects.filter(email__iexact=new_email).exclude(pk=user.pk).exists():
+                from django.contrib import messages as msg
+                msg.error(request, 'That email is already in use by another account.')
+                return redirect('profile')
+            user.email = new_email
+            user.username = new_email  # keep username == email
+
+        user.save()
+
+        # Update UserProfile fields
+        profile_obj.bio = request.POST.get('bio', '').strip()[:500]
+        profile_obj.institution = request.POST.get('institution', '').strip()[:200]
+        profile_obj.research_interests = request.POST.get('research_interests', '').strip()[:300]
+        profile_obj.website = request.POST.get('website', '').strip()
+
+        if 'avatar' in request.FILES:
+            profile_obj.avatar = request.FILES['avatar']
+
+        profile_obj.save()
+
+        from django.contrib import messages as msg
+        msg.success(request, 'Profile updated successfully!')
+        return redirect('profile')
+
+    # Stats for display
+    documents = Document.objects.filter(user=user)
+    total_papers = documents.count()
+    total_words = documents.aggregate(Sum('word_count'))['word_count__sum'] or 0
+
+    analysis_results = AnalysisResult.objects.filter(document__user=user)
+    all_keywords = []
+    for a in analysis_results:
+        all_keywords.extend(a.keywords or [])
+    unique_keywords = len(set(all_keywords))
+
+    plagiarism_checks = PlagiarismCheck.objects.filter(document__in=documents)
+    avg_plagiarism = plagiarism_checks.aggregate(Avg('similarity_score'))['similarity_score__avg']
+    avg_plagiarism = round(avg_plagiarism * 100, 1) if avg_plagiarism else 0
+
+    return render(request, 'analyzer/profile.html', {
+        'profile': profile_obj,
+        'documents': documents.order_by('-created_at'),
+        'total_papers': total_papers,
+        'total_words': total_words,
+        'unique_keywords': unique_keywords,
+        'avg_plagiarism': avg_plagiarism,
+        'member_since': user.date_joined,
+    })
 
 
 @login_required
@@ -567,58 +623,83 @@ def dashboard(request):
     from django.utils import timezone
     from django.db.models import Count, Avg, Sum
     from datetime import timedelta
-    
+    import json as _json
+
     user = request.user
-    
+
     # Total papers
     total_papers = Document.objects.filter(user=user).count()
-    
+
     # Recent activity for sidebar
     recent_activity = Document.objects.filter(user=user).order_by('-created_at')[:5]
     documents = Document.objects.filter(user=user)
-    
+
     # Total words
     total_words = documents.aggregate(Sum('word_count'))['word_count__sum'] or 0
-    
+
     # Average words per paper
     avg_words = total_words / total_papers if total_papers > 0 else 0
-    
+
     # This month papers
     now = timezone.now()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     this_month = Document.objects.filter(user=user, created_at__gte=month_start).count()
-    
+
     # Plagiarism stats
     from .models import PlagiarismCheck
     user_docs = Document.objects.filter(user=user)
     plagiarism_checks = PlagiarismCheck.objects.filter(document__in=user_docs)
-    
+
     avg_plagiarism = plagiarism_checks.aggregate(Avg('similarity_score'))['similarity_score__avg']
     avg_plagiarism = round(avg_plagiarism * 100, 1) if avg_plagiarism else 0
-    
+
     low_plag = plagiarism_checks.filter(similarity_score__lt=0.25).count()
     high_plag = plagiarism_checks.filter(similarity_score__gte=0.50).count()
-    
+
     # Top keywords
     from .models import AnalysisResult
     analysis_results = AnalysisResult.objects.filter(document__user=user)
     all_keywords = []
     for a in analysis_results:
         all_keywords.extend(a.keywords or [])
-    
+
     from collections import Counter
     keyword_counts = Counter(all_keywords)
     top_keywords = keyword_counts.most_common(10)
-    
+
     # Unique keywords count
     unique_keywords = len(set(all_keywords))
-    
+
     # Member since
     member_since = user.date_joined
-    
-    # User full name
-    user_full_name = user.get_full_name() or user.username
-    
+
+    # User display name — first_name preferred, fallback to email prefix
+    display_name = (user.first_name or '').strip() or user.email.split('@')[0]
+
+    # Avatar initial — use first_name initial, fallback to email
+    avatar_initial = ((user.first_name or '').strip() or user.email)[0].upper()
+
+    # Monthly chart data — papers per month for last 6 months
+    chart_labels = []
+    chart_data = []
+    for i in range(5, -1, -1):
+        month_date = (now.replace(day=1) - timedelta(days=i * 28)).replace(day=1)
+        if month_date.month == 12:
+            next_month = month_date.replace(year=month_date.year + 1, month=1)
+        else:
+            next_month = month_date.replace(month=month_date.month + 1)
+        count = Document.objects.filter(
+            user=user,
+            created_at__gte=month_date,
+            created_at__lt=next_month
+        ).count()
+        chart_labels.append(month_date.strftime('%b %Y'))
+        chart_data.append(count)
+
+    # UserProfile
+    from .models import UserProfile
+    profile_obj, _ = UserProfile.objects.get_or_create(user=user)
+
     return render(request, 'analyzer/dashboard.html', {
         'total_papers': total_papers,
         'avg_plagiarism': avg_plagiarism,
@@ -632,7 +713,12 @@ def dashboard(request):
         'high_plag': high_plag,
         'top_keywords': top_keywords,
         'member_since': member_since,
-        'user_full_name': user_full_name,
+        'user_full_name': display_name,
+        'display_name': display_name,
+        'avatar_initial': avatar_initial,
+        'chart_labels': chart_labels,
+        'chart_data': chart_data,
+        'profile': profile_obj,
     })
 
 
@@ -822,12 +908,10 @@ def ask_question(request, document_id):
         
         # Use the RAG pipeline to get an answer
         answer = rag_pipeline(document.content, question)
+        if isinstance(answer, dict):
+            answer = answer.get('summary', str(answer))
         
-        return JsonResponse({
-            'success': True,
-            'question': question,
-            'answer': answer
-        })
+        return JsonResponse({'success': True, 'question': question, 'answer': answer})
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
@@ -1093,13 +1177,25 @@ def export_as_pdf(request, document, analysis):
 
 
 def export_as_txt(document, analysis):
-    """Export analysis as text file"""
+    """Export analysis as text file with citation"""
     lines = []
     lines.append("=" * 60)
     lines.append(document.title or "Untitled Document")
     lines.append("=" * 60)
     lines.append("")
-    
+
+    # Citation block
+    lines.append("CITATION")
+    lines.append("-" * 40)
+    authors = ", ".join(analysis.authors) if analysis and analysis.authors else "Unknown Author"
+    year = analysis.publication_year if analysis and analysis.publication_year else "n.d."
+    title = document.title or "Untitled"
+    url = f" Retrieved from {document.url}" if document.url else ""
+    lines.append(f"APA:     {authors} ({year}). {title}.{url}")
+    lines.append(f"MLA:     {(analysis.authors[0] if analysis and analysis.authors else 'Unknown')}. \"{title}.\" {year}.{url}")
+    lines.append(f"Chicago: {authors}. \"{title}.\" {year}.{url}")
+    lines.append("")
+
     if analysis:
         if analysis.authors:
             lines.append(f"Authors: {', '.join(analysis.authors)}")
@@ -1107,50 +1203,50 @@ def export_as_txt(document, analysis):
             lines.append(f"Publication Year: {analysis.publication_year}")
         lines.append(f"Word Count: {analysis.word_count}")
         lines.append("")
-        
+
         if analysis.abstract:
             lines.append("ABSTRACT")
             lines.append("-" * 40)
             lines.append(analysis.abstract)
             lines.append("")
-        
+
         if analysis.summary:
             lines.append("SUMMARY")
             lines.append("-" * 40)
             lines.append(analysis.summary)
             lines.append("")
-        
+
         if analysis.keywords:
             lines.append("KEYWORDS")
             lines.append("-" * 40)
             lines.append(", ".join(analysis.keywords))
             lines.append("")
-        
+
         if analysis.methodology:
             lines.append("METHODOLOGY")
             lines.append("-" * 40)
             for method in analysis.methodology:
                 lines.append(f"• {method}")
             lines.append("")
-        
+
         if analysis.technologies:
             lines.append("TECHNOLOGIES")
             lines.append("-" * 40)
             lines.append(", ".join(analysis.technologies))
             lines.append("")
-        
+
         if analysis.impact:
             lines.append("IMPACT & CONTRIBUTIONS")
             lines.append("-" * 40)
             lines.append(analysis.impact)
             lines.append("")
-        
+
         if analysis.goal:
             lines.append("RESEARCH GOAL")
             lines.append("-" * 40)
             lines.append(analysis.goal)
             lines.append("")
-    
+
     content = "\n".join(lines)
     return HttpResponse(content, content_type='text/plain')
 
@@ -1182,14 +1278,26 @@ def export_as_csv(document, analysis):
 
 
 def export_as_json(document, analysis):
-    """Export analysis as JSON"""
+    """Export analysis as JSON with citation"""
     import json
-    
+
+    authors = analysis.authors if analysis and analysis.authors else []
+    year = analysis.publication_year if analysis and analysis.publication_year else "n.d."
+    title = document.title or "Untitled"
+    url_str = document.url or ""
+    author_str = ", ".join(authors) if authors else "Unknown Author"
+    first_author = authors[0] if authors else "Unknown"
+
     data = {
         'title': document.title,
         'created_at': document.created_at.isoformat() if document.created_at else None,
+        'citation': {
+            'apa': f"{author_str} ({year}). {title}.{' Retrieved from ' + url_str if url_str else ''}",
+            'mla': f"{first_author}. \"{title}.\" {year}.{' ' + url_str if url_str else ''}",
+            'chicago': f"{author_str}. \"{title}.\" {year}.{' ' + url_str if url_str else ''}",
+        },
     }
-    
+
     if analysis:
         data.update({
             'authors': analysis.authors or [],
@@ -1205,7 +1313,7 @@ def export_as_json(document, analysis):
             'references': analysis.references or [],
             'extracted_links': analysis.extracted_links or [],
         })
-    
+
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 

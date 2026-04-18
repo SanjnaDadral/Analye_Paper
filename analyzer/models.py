@@ -42,7 +42,7 @@ class AnalysisResult(models.Model):
     technologies = models.JSONField(default=list)
     goal = models.TextField(blank=True)
     impact = models.TextField(blank=True)
-    publication_year = models.CharField(max_length=10, blank=True)
+    publication_year = models.CharField(max_length=10, blank=True, null=True, default='')
     model_used = models.CharField(max_length=200, blank=True)  # AI/ML model used in research
     
     extracted_links = models.JSONField(default=list)
@@ -141,6 +141,29 @@ class PasswordResetOTP(models.Model):
         """Check if OTP is still valid and not used"""
         from django.utils import timezone
         return not self.is_used and timezone.now() < self.expires_at
+
+
+class UserProfile(models.Model):
+    """Extended user profile with bio and avatar"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    bio = models.TextField(blank=True, max_length=500)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    institution = models.CharField(max_length=200, blank=True)
+    research_interests = models.CharField(max_length=300, blank=True)
+    website = models.URLField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'User Profile'
+        verbose_name_plural = 'User Profiles'
+
+    def __str__(self):
+        return f"Profile of {self.user.username}"
+
+    def get_avatar_initial(self):
+        name = self.user.first_name or self.user.email
+        return name[0].upper() if name else 'U'
 
 
 class ContactMessage(models.Model):

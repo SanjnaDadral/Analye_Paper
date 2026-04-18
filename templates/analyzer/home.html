@@ -9,13 +9,23 @@
 
   body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background: #ffffff;
-    color: #0f172a;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .hero-subtitle { color: var(--text-secondary) !important; }
+    .hero-badge { border-color: var(--border-color) !important; color: #818cf8 !important; }
+    .feature-card { background: var(--bg-card); border-color: var(--border-color); }
+    .feature-card h3 { color: var(--text-primary); }
+    .feature-card p { color: var(--text-secondary); }
+    .step-card { background: var(--bg-card); border-color: var(--border-color); }
+    .section-title { color: var(--text-primary); }
   }
 
   /* ========== HERO SECTION ========== */
   .hero-section {
-    background: #ffffff;
+    background: var(--bg-primary);
     padding: 4rem 2rem;
     position: relative;
     overflow: hidden;
@@ -28,11 +38,9 @@
     left: -10%;
     width: 600px;
     height: 600px;
-    background: radial-gradient(
-      circle,
-      rgba(99, 102, 241, 0.15) 0%,
-      transparent 70%
-    );
+    background: radial-gradient(circle,
+        rgba(99, 102, 241, 0.15) 0%,
+        transparent 70%);
     border-radius: 50%;
   }
 
@@ -43,11 +51,9 @@
     left: -5%;
     width: 400px;
     height: 400px;
-    background: radial-gradient(
-      circle,
-      rgba(236, 72, 153, 0.1) 0%,
-      transparent 70%
-    );
+    background: radial-gradient(circle,
+        rgba(236, 72, 153, 0.1) 0%,
+        transparent 70%);
     border-radius: 50%;
   }
 
@@ -70,11 +76,9 @@
 
   .hero-badge {
     display: inline-block;
-    background: linear-gradient(
-      135deg,
-      rgba(99, 102, 241, 0.1),
-      rgba(236, 72, 153, 0.1)
-    );
+    background: linear-gradient(135deg,
+        rgba(99, 102, 241, 0.1),
+        rgba(236, 72, 153, 0.1));
     border: 1px solid #e2e8f0;
     color: #6366f1;
     padding: 0.5rem 1rem;
@@ -137,12 +141,10 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent);
     transition: left 0.5s;
   }
 
@@ -190,22 +192,9 @@
     position: relative;
   }
 
-  /* Watermark cover */
-  .hero-illustration::after {
-    content: "";
-    position: absolute;
-    top: 5%;
-    left: 8%;
-    width: 10%;
-    height: 10%;
-    background: #ffffff;
-    z-index: 10;
-  }
-
   .hero-illustration-img {
     max-width: 100%;
     height: auto;
-    mix-blend-mode: darken;
   }
 
   @keyframes fadeInDown {
@@ -234,10 +223,10 @@
 
   /* ========== TRUST BADGE ========== */
   .trust-section {
-    background: white;
+    background: var(--bg-primary);
     padding: 2rem;
     text-align: center;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border-color);
   }
 
   .trust-badge {
@@ -265,31 +254,27 @@
   }
 
   .section-header {
-    max-width: 600px;
-    margin: 0 auto 3rem;
-    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 3.5rem;
+    text-align: center !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
-  .features-section .section-header,
-  .how-it-works .section-header {
-    margin: 0 auto 3rem auto;
-    text-align: center;
-    max-width: 100%;
-  }
+
 
   .section-label {
-    display: inline-block;
+    display: block;
     color: #6366f1;
     font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 0.5rem;
-  }
-
-  .features-section .section-label,
-  .how-it-works .section-label {
-    display: block;
+    text-align: center;
+    width: 100%;
   }
 
   .section-title {
@@ -298,6 +283,9 @@
     color: #0f172a;
     margin-bottom: 1rem;
     letter-spacing: -0.5px;
+    text-align: center;
+    width: 100%;
+    display: block;
   }
 
   .section-description {
@@ -305,20 +293,24 @@
     color: #334155;
     line-height: 1.6;
     font-weight: 500;
+    text-align: center;
+    width: 100%;
+    display: block;
   }
 
   .features-section .section-title,
   .how-it-works .section-title {
-    text-align: center;
     background: linear-gradient(135deg, #6366f1 0%, #0f172a 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-  }
-
-  .features-section .section-description,
-  .how-it-works .section-description {
-    text-align: center;
+    text-align: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+    margin-bottom: 1.5rem !important;
   }
 
   .upload-tabs {
@@ -426,8 +418,9 @@
 
   /* ========== FEATURES SECTION ========== */
   .features-section {
-    background: white;
+    background: var(--bg-primary);
     padding: 4rem 2rem;
+    text-align: center;
   }
 
   .features-grid {
@@ -439,7 +432,7 @@
   }
 
   .feature-card {
-    background: #ffffff;
+    background: var(--bg-card);
     border: 2px solid #e2e8f0;
     border-radius: 16px;
     padding: 2rem;
@@ -465,7 +458,7 @@
   .feature-icon {
     width: 65px;
     height: 65px;
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -482,11 +475,9 @@
   }
 
   .feature-card:nth-child(6) .feature-icon {
-    background: linear-gradient(
-      135deg,
-      rgba(251, 191, 36, 0.15),
-      rgba(250, 204, 21, 0.1)
-    );
+    background: linear-gradient(135deg,
+        rgba(251, 191, 36, 0.15),
+        rgba(250, 204, 21, 0.1));
     border-color: rgba(251, 191, 36, 0.3);
   }
 
@@ -524,6 +515,7 @@
   .how-it-works {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     padding: 4rem 2rem;
+    text-align: center;
   }
 
   .steps-grid {
@@ -637,7 +629,7 @@
 
   /* ========== TESTIMONIALS ========== */
   .testimonials-section {
-    background: white;
+    background: var(--bg-primary);
     padding: 4rem 2rem;
   }
 
@@ -878,16 +870,8 @@
       </div>
     </div>
     <div class="hero-illustration">
-      <img
-        src="{% static 'images/ai_ml_illustration.png' %}?v=4"
-        alt="AI Paper Analysis"
-        class="hero-illustration-img"
-        style="
-          mix-blend-mode: multiply;
-          filter: brightness(1.1) contrast(1.05) saturate(0.95);
-          transform: scale(1.1);
-        "
-      />
+      <img src="{% static 'images/ai_ml_illustration.png' %}?v=5" alt="AI Paper Analysis"
+        class="hero-illustration-img" />
     </div>
   </div>
 </section>
@@ -911,10 +895,7 @@
   </div>
   <div class="features-grid">
     <div class="feature-card">
-      <div
-        class="feature-icon"
-        style="background: rgba(239, 68, 68, 0.1); color: #ef4444"
-      >
+      <div class="feature-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444">
         <i class="fas fa-shield-halved"></i>
       </div>
       <h3 class="feature-title">AI Plagiarism Check</h3>
@@ -924,10 +905,7 @@
       </p>
     </div>
     <div class="feature-card">
-      <div
-        class="feature-icon"
-        style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6"
-      >
+      <div class="feature-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6">
         <i class="fas fa-brain"></i>
       </div>
       <h3 class="feature-title">Contextual Q&A</h3>
@@ -937,10 +915,7 @@
       </p>
     </div>
     <div class="feature-card">
-      <div
-        class="feature-icon"
-        style="background: rgba(59, 130, 246, 0.1); color: #3b82f6"
-      >
+      <div class="feature-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6">
         <i class="fas fa-link-slash"></i>
       </div>
       <h3 class="feature-title">Smart Citations</h3>
@@ -950,10 +925,7 @@
       </p>
     </div>
     <div class="feature-card">
-      <div
-        class="feature-icon"
-        style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9"
-      >
+      <div class="feature-icon" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9">
         <i class="fas fa-microchip"></i>
       </div>
       <h3 class="feature-title">Stack Detection</h3>
@@ -963,10 +935,7 @@
       </p>
     </div>
     <div class="feature-card">
-      <div
-        class="feature-icon"
-        style="background: rgba(16, 185, 129, 0.1); color: #10b981"
-      >
+      <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981">
         <i class="fas fa-columns"></i>
       </div>
       <h3 class="feature-title">Side-by-Side Compare</h3>
@@ -976,10 +945,7 @@
       </p>
     </div>
     <div class="feature-card">
-      <div
-        class="feature-icon"
-        style="background: rgba(245, 158, 11, 0.1); color: #f59e0b"
-      >
+      <div class="feature-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b">
         <i class="fas fa-file-export"></i>
       </div>
       <h3 class="feature-title">Multi-Format Export</h3>
@@ -1041,9 +1007,7 @@
 
 <section class="result-preview-section">
   <div class="section-header">
-    <span class="section-label"
-      ><i class="fas fa-magnifying-glass me-2"></i>Preview</span
-    >
+    <span class="section-label"><i class="fas fa-magnifying-glass me-2"></i>Preview</span>
     <h2 class="section-title">See Your Results in Real-Time</h2>
   </div>
   <div class="preview-container">
@@ -1086,18 +1050,12 @@
         </div>
       </div>
       <div>
-        <strong style="color: #0f172a"
-          >Detected Technologies & Keywords:</strong
-        >
+        <strong style="color: #0f172a">Detected Technologies & Keywords:</strong>
         <div class="preview-keywords">
-          <span class="keyword-tag">Transformer</span
-          ><span class="keyword-tag">Attention Mechanism</span
-          ><span class="keyword-tag">BERT</span
-          ><span class="keyword-tag">GPT</span
-          ><span class="keyword-tag">Neural Network</span
-          ><span class="keyword-tag">Python</span
-          ><span class="keyword-tag">TensorFlow</span
-          ><span class="keyword-tag">PyTorch</span>
+          <span class="keyword-tag">Transformer</span><span class="keyword-tag">Attention Mechanism</span><span
+            class="keyword-tag">BERT</span><span class="keyword-tag">GPT</span><span class="keyword-tag">Neural
+            Network</span><span class="keyword-tag">Python</span><span class="keyword-tag">TensorFlow</span><span
+            class="keyword-tag">PyTorch</span>
         </div>
       </div>
     </div>
@@ -1106,9 +1064,7 @@
 
 <section class="testimonials-section">
   <div class="section-header">
-    <span class="section-label"
-      ><i class="fas fa-quote-left me-2"></i>Testimonials</span
-    >
+    <span class="section-label"><i class="fas fa-quote-left me-2"></i>Testimonials</span>
     <h2 class="section-title">Loved by Researchers & Students</h2>
   </div>
   <div class="testimonials-grid">
@@ -1160,34 +1116,28 @@
   </div>
 </section>
 
-<section
-  style="
+<section style="
     background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
     padding: 4rem 2rem;
     text-align: center;
     color: white;
     margin-bottom: 0;
-  "
->
+  ">
   <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem">
     Ready to Transform Your Research?
   </h2>
-  <p
-    style="
+  <p style="
       font-size: 1.1rem;
       margin-bottom: 2rem;
       opacity: 0.95;
       max-width: 600px;
       margin-left: auto;
       margin-right: auto;
-    "
-  >
+    ">
     Join thousands of researchers already using PaperAIzer. Analyze your first
     paper free.
   </p>
-  <a
-    href="{% url 'upload' %}"
-    style="
+  <a href="{% url 'upload' %}" style="
       background: white;
       color: #6366f1;
       padding: 1rem 3rem;
@@ -1196,16 +1146,13 @@
       font-weight: 700;
       display: inline-block;
       transition: all 0.3s ease;
-    "
-    onmouseover="
+    " onmouseover="
       this.style.transform = 'translateY(-3px)';
       this.style.boxShadow = '0 15px 40px rgba(0,0,0,0.2)';
-    "
-    onmouseout="
+    " onmouseout="
       this.style.transform = 'translateY(0)';
       this.style.boxShadow = 'none';
-    "
-  >
+    ">
     <i class="fas fa-rocket me-2"></i>Start Your Free Analysis
   </a>
 </section>

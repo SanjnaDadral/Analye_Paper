@@ -2,7 +2,6 @@ import os
 import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
-from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
@@ -11,58 +10,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ======================
 # SECURITY
 # ======================
-SECRET_KEY = os.getenv('SECRET_KEY')
-if not SECRET_KEY:
-    raise ImproperlyConfigured("SECRET_KEY environment variable is not set!")
+SECRET_KEY = os.getenv(
+    'SECRET_KEY',
+    'django-insecure-dev-key-change-this'
+)
 
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
-
-# Dynamic ALLOWED_HOSTS for Render
-RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+# DEBUG = False # ALWAYS FALSE on Render
+DEBUG = False
 ALLOWED_HOSTS = [
     "research-nraq.onrender.com",
     ".onrender.com",
     "localhost",
     "127.0.0.1",
+
 ]
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://research-nraq.onrender.com",
-    "https://*.onrender.com",
-]
+    "https://research-nraq.onrender.com",]
+
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = False   # Render handles HTTPS
+SECURE_SSL_REDIRECT = False  # Render handles HTTPS; never redirect locally
 
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
-# ======================
-# STATIC FILES - FIXED
-# ======================
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-
-# WhiteNoise for production (recommended for Render)
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
-
-# ======================
-# MEDIA FILES
-# ======================
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-# ======================
-# FILE UPLOAD LIMITS
-# ======================
-FILE_UPLOAD_MAX_MEMORY_SIZE = 52 * 1024 * 1024   # 52 MB
-# DATA_UPLOAD_MAX_MEMORY_SIZE = 52 * 1024 * 1024
-# settings.py
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 # ======================
 # APPS
 # ======================
@@ -74,15 +46,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+
     'analyzer',
 ]
 
 # ======================
-# MIDDLEWARE
+# MIDDLEWARE (IMPORTANT ORDER)
 # ======================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',   # Must be right after SecurityMiddleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -120,7 +93,7 @@ WSGI_APPLICATION = 'paper_analyzer.wsgi.application'
 # ======================
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600
     )
 }
@@ -139,7 +112,7 @@ AUTHENTICATION_BACKENDS = [
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = '/'
 
 # ======================
 # INTERNATIONALIZATION
@@ -150,6 +123,23 @@ USE_I18N = True
 USE_TZ = True
 
 # ======================
+# STATIC FILES (WHITE NOISE FIXED)
+# ======================
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static'
+]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# ======================
+# MEDIA
+# ======================
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# ======================
 # DEFAULT AUTO FIELD
 # ======================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -157,23 +147,40 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ======================
 # API KEYS
 # ======================
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-if not GROQ_API_KEY:
-    raise ImproperlyConfigured("GROQ_API_KEY environment variable is not set!")
+GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
+
+# ======================
+# REST FRAMEWORK
+# ======================
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '200/hour'
+    }
+}
 
 # ======================
 # EMAIL
 # ======================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() == 'true'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@paperyzer.ai')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@paperyzer.ai')
+EMAIL_TIMEOUT = 10
 
 # ======================
-# LOGGING - Improved for debugging
+# LOGGING
 # ======================
 LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(exist_ok=True)
@@ -181,12 +188,14 @@ LOGS_DIR.mkdir(exist_ok=True)
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+
     'formatters': {
         'verbose': {
             'format': '{levelname} {asctime} {module} {message}',
             'style': '{',
         },
     },
+
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
@@ -196,24 +205,14 @@ LOGGING = {
             'class': 'logging.FileHandler',
             'filename': LOGS_DIR / 'app.log',
             'formatter': 'verbose',
+            'level': 'INFO',
         },
     },
+
     'root': {
         'handlers': ['console', 'file'],
-        'level': 'DEBUG' if DEBUG else 'INFO',
+        'level': 'INFO',
     },
-    'loggers': {
-        'django.security.DisallowedHost': {
-            'handlers': ['console', 'file'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['console', 'file'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-    }
 }
 
 # ======================
@@ -221,4 +220,12 @@ LOGGING = {
 # ======================
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
+
+#  safer than DENY for many templates
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# ======================
+# FILE UPLOAD LIMIT
+# ======================
+FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024

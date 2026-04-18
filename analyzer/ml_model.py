@@ -643,7 +643,7 @@ class MLProcessor:
         if not impacts:
             impacts.append("Contribution to advancing knowledge in the specified research domain")
        
-        return ' '.join(impact[:2])[:450] if impacts else "Contribution to advancing knowledge in the specified research domain"
+        return ' '.join(impacts[:2])[:450] if impacts else "Contribution to advancing knowledge in the specified research domain"
 
     def extract_methodology_summary(self, text: str) -> str:
         patterns = [
@@ -812,17 +812,41 @@ class MLProcessor:
                 if len(ref_section) > 100:
                     break
        
+        # Improve reference extraction by merging lines that likely belong to the same reference
         if ref_section:
-            ref_lines = ref_section.split('\n')
-            for line in ref_lines:
+            import re
+            # Try to identify where new references start (e.g., [1], 1., or Author Name)
+            raw_lines = ref_section.split('\n')
+            current_ref = ""
+            
+            for line in raw_lines:
                 line = line.strip()
-                if len(line) < 10:
-                    continue
-                line = re.sub(r'^[\[\(\d\.\)\-\s]+', '', line).strip()
-                if len(line) > 15:
-                    references.append(line[:180])
-       
-        return references[:50]
+                if not line: continue
+                
+                # If line starts with [1], 1., (1) or similar - it's a new reference
+                if re.match(r'^(\[?\d+[.\)\]]|\(\d+\))', line):
+                    if current_ref:
+                        references.append(current_ref[:250])
+                    current_ref = re.sub(r'^(\[?\d+[.\)\]]|\(\d+\))', '', line).strip()
+                else:
+                    # If it doesn't look like a new ref, append to the current one
+                    if current_ref:
+                        current_ref += " " + line
+                    else:
+                        current_ref = line
+            
+            if current_ref:
+                references.append(current_ref[:250])
+
+        # Final cleanup and filtering
+        cleaned_refs = []
+        for r in references:
+            r = r.strip()
+            # Basic sanity check: must have multiple words and be significant
+            if len(r) > 25 and len(r.split()) >= 3:
+                cleaned_refs.append(r)
+                
+        return cleaned_refs[:50]
 
     def extract_visuals(self, text: str) -> Dict[str, Any]:
         visuals = {'tables': [], 'figures': [], 'counts': {'figures': 0, 'tables': 0, 'charts': 0}}

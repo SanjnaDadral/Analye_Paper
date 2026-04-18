@@ -1,252 +1,252 @@
-{% extends 'analyzer/base.html' %} {% load static %} {% block title %}Profile -
-PaperAIzer{% endblock %} {% block extra_css %}
+{% extends 'analyzer/base.html' %}
+{% load static humanize %}
+{% block title %}Profile - PaperAIzer{% endblock %}
+{% block extra_css %}
 <style>
-  .profile-header {
-    background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
-    color: white;
-    padding: 2rem;
-    border-radius: 16px;
-    margin-bottom: 2rem;
+  .profile-wrapper{min-height:calc(100vh - 70px);padding-top:1rem;}
+  /* ── Header ── */
+  .profile-header{
+    background:linear-gradient(135deg,#6366f1 0%,#a855f7 50%,#ec4899 100%);
+    color:white;padding:2rem 2.5rem;border-radius:24px;margin-bottom:2rem;
+    position:relative;overflow:hidden;box-shadow:0 15px 35px rgba(99,102,241,0.2);
   }
-  .profile-avatar {
-    width: 80px;
-    height: 80px;
-    background: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    color: var(--primary);
-    font-weight: 700;
+  .profile-header::before{content:'';position:absolute;top:-40%;right:-15%;width:280px;height:280px;background:rgba(255,255,255,0.08);border-radius:50%;filter:blur(40px);}
+  .profile-avatar-wrap{position:relative;flex-shrink:0;}
+  .profile-avatar{
+    width:90px;height:90px;border-radius:22px;
+    background:rgba(255,255,255,0.2);border:3px solid rgba(255,255,255,0.35);
+    display:flex;align-items:center;justify-content:center;
+    font-size:2.2rem;font-weight:800;overflow:hidden;
   }
-  .stat-card {
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1.5rem;
-    text-align: center;
-    transition: all 0.3s;
+  .profile-avatar img{width:100%;height:100%;object-fit:cover;}
+  .avatar-edit-btn{
+    position:absolute;bottom:-6px;right:-6px;
+    width:28px;height:28px;border-radius:50%;
+    background:white;color:#6366f1;border:none;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.75rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);
+    transition:transform .2s;
   }
-  .stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.15);
+  .avatar-edit-btn:hover{transform:scale(1.1);}
+  /* ── Cards ── */
+  .profile-card{background:white;border:1px solid #e2e8f0;border-radius:20px;padding:1.75rem;margin-bottom:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,0.04);}
+  .profile-card h5{font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;gap:.6rem;color:#1e293b;font-size:1rem;}
+  .profile-card h5 i{width:30px;height:30px;background:rgba(99,102,241,0.1);color:#6366f1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.85rem;}
+  /* ── Form ── */
+  .form-label{font-weight:600;font-size:.85rem;color:#475569;margin-bottom:.4rem;}
+  .form-control,.form-select{border:1.5px solid #e2e8f0;border-radius:10px;padding:.65rem .9rem;font-size:.9rem;transition:border-color .2s,box-shadow .2s;}
+  .form-control:focus,.form-select:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.12);outline:none;}
+  textarea.form-control{resize:vertical;min-height:90px;}
+  /* ── Stats ── */
+  .stat-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.25rem;text-align:center;transition:all .3s;}
+  .stat-card:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(99,102,241,0.12);}
+  .stat-value{font-size:1.6rem;font-weight:800;color:#6366f1;}
+  .stat-label{font-size:.8rem;color:#94a3b8;margin-top:.2rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  /* ── Paper items ── */
+  .paper-item{display:block;padding:.9rem 1rem;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:.65rem;text-decoration:none;color:inherit;transition:all .25s;}
+  .paper-item:hover{background:#f8fafc;border-color:#6366f1;transform:translateX(4px);}
+  .paper-title{font-weight:600;color:#1e293b;margin-bottom:.2rem;font-size:.9rem;}
+  .paper-meta{font-size:.8rem;color:#94a3b8;}
+  /* ── Alerts ── */
+  .alert-success-custom{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:12px;padding:.9rem 1.1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;}
+  .alert-error-custom{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:.9rem 1.1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;}
+  /* ── Mobile ── */
+  @media(max-width:768px){
+    .profile-header{padding:1.25rem;}
+    .profile-avatar{width:70px;height:70px;font-size:1.7rem;border-radius:16px;}
+    .profile-header h2{font-size:1.2rem;}
+    .profile-card{padding:1.25rem;}
   }
-  .stat-value {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--primary);
-  }
-  .stat-label {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-top: 0.25rem;
-  }
-  .profile-card {
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-  .profile-card h5 {
-    font-weight: 600;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-primary);
-  }
-  .profile-card h5 i {
-    color: var(--primary);
-  }
-  .info-row {
-    display: flex;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border-color);
-  }
-  .info-row:last-child {
-    border-bottom: none;
-  }
-  .info-label {
-    font-weight: 600;
-    color: var(--text-secondary);
-    width: 120px;
-    flex-shrink: 0;
-  }
-  .info-value {
-    color: var(--text-primary);
-  }
-  .paper-item {
-    display: block;
-    padding: 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    margin-bottom: 0.75rem;
-    text-decoration: none;
-    color: inherit;
-    transition: all 0.3s;
-  }
-  .paper-item:hover {
-    background: var(--bg-secondary);
-    border-color: var(--primary);
-    transform: translateX(5px);
-  }
-  .paper-title {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-  }
-  .paper-meta {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-  }
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: var(--text-muted);
-  }
-  .empty-state i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.3;
+  @media(max-width:576px){
+    .stat-value{font-size:1.3rem;}
+    .profile-header .d-flex{flex-wrap:wrap;}
   }
 </style>
-{% endblock %} {% block content %}
-<div class="container py-4">
-  <!-- Profile Header -->
+{% endblock %}
+
+{% block content %}
+<div class="profile-wrapper">
+<div class="container pb-5">
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="{% if message.tags == 'success' %}alert-success-custom{% else %}alert-error-custom{% endif %}">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- ── Header ── -->
   <div class="profile-header">
-    <div class="row align-items-center">
-      <div class="col-auto">
-        <div class="profile-avatar">
-          {{ user.username|make_list|first|upper }}
+    <div class="d-flex align-items-center gap-4 flex-wrap">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="avatarPreview">
+          {% if profile.avatar %}
+            <img src="{{ profile.avatar.url }}" alt="avatar" id="avatarImg">
+          {% else %}
+            <span id="avatarInitial">{{ user.first_name|default:user.email|make_list|first|upper }}</span>
+          {% endif %}
         </div>
+        <button type="button" class="avatar-edit-btn" onclick="document.getElementById('avatarInput').click()" title="Change photo">
+          <i class="fas fa-camera"></i>
+        </button>
       </div>
-      <div class="col">
-        <h2 class="mb-1">{{ user.username }}</h2>
-        <p class="mb-0 opacity-75">
-          <i class="fas fa-calendar me-2"></i>Member since {{ member_since|date:"F Y" }}
-        </p>
+      <div>
+        <h2 class="mb-1 fw-bold">{{ user.get_full_name|default:user.email }}</h2>
+        <div class="opacity-80 small mb-1"><i class="fas fa-envelope me-1"></i>{{ user.email }}</div>
+        {% if profile.institution %}<div class="opacity-75 small"><i class="fas fa-building me-1"></i>{{ profile.institution }}</div>{% endif %}
+        <div class="opacity-70 small mt-1"><i class="fas fa-calendar me-1"></i>Member since {{ member_since|date:"F Y" }}</div>
       </div>
-      <div class="col-auto">
-        <a href="{% url 'logout' %}" class="btn btn-light">
-          <i class="fas fa-sign-out-alt me-2"></i>Logout
+      <div class="ms-auto">
+        <a href="{% url 'dashboard' %}" class="btn btn-light btn-sm rounded-pill px-3">
+          <i class="fas fa-tachometer-alt me-1 text-primary"></i>Dashboard
         </a>
       </div>
     </div>
   </div>
 
-  <!-- Stats Row -->
+  <!-- ── Stats ── -->
   <div class="row g-3 mb-4">
-    <div class="col-md-3">
-      <div class="stat-card">
-        <div class="stat-value">{{ total_papers|default:0 }}</div>
-        <div class="stat-label">Papers Analyzed</div>
-      </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="stat-value">{{ total_papers|default:0 }}</div><div class="stat-label">Papers</div></div>
     </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <div class="stat-value">{{ unique_keywords|default:0 }}</div>
-        <div class="stat-label">Keywords</div>
-      </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="stat-value">{{ unique_keywords|default:0 }}</div><div class="stat-label">Keywords</div></div>
     </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <div class="stat-value">{{ avg_plagiarism|default:0 }}%</div>
-        <div class="stat-label">Avg Plagiarism</div>
-      </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="stat-value">{{ avg_plagiarism|default:0 }}%</div><div class="stat-label">Avg Similarity</div></div>
     </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <div class="stat-value">{{ documents.count|default:0 }}</div>
-        <div class="stat-label">Total Documents</div>
-      </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="stat-value">{{ total_words|default:0|intcomma }}</div><div class="stat-label">Total Words</div></div>
     </div>
   </div>
 
-  <div class="row">
-    <!-- Profile Info -->
-    <div class="col-lg-4">
-      <div class="profile-card">
-        <h5><i class="fas fa-user-circle"></i> Profile Information</h5>
+  <div class="row g-4">
 
-        <div class="info-row">
-          <span class="info-label">Username</span>
-          <span class="info-value">{{ user.username }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">First Name</span>
-          <span class="info-value">{{ user.first_name|default:"-" }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Last Name</span>
-          <span class="info-value">{{ user.last_name|default:"-" }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Email</span>
-          <span class="info-value">{{ user.email|default:"-" }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Member Since</span>
-          <span class="info-value">{{ member_since|date:"M d, Y" }}</span>
-        </div>
+    <!-- ── Edit Form ── -->
+    <div class="col-lg-5">
+      <div class="profile-card">
+        <h5><i class="fas fa-user-edit"></i> Edit Profile</h5>
+        <form method="post" enctype="multipart/form-data" id="profileForm">
+          {% csrf_token %}
+          <!-- Hidden avatar input -->
+          <input type="file" id="avatarInput" name="avatar" accept="image/*" class="d-none">
+
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">First Name</label>
+              <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}" placeholder="First name">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Last Name</label>
+              <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" placeholder="Last name">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Email Address</label>
+              <input type="email" name="email" class="form-control" value="{{ user.email }}" placeholder="your@email.com" required>
+              <div class="form-text text-muted" style="font-size:.78rem;">Changing email also updates your login.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Institution / University</label>
+              <input type="text" name="institution" class="form-control" value="{{ profile.institution }}" placeholder="e.g. MIT, Stanford…">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Research Interests</label>
+              <input type="text" name="research_interests" class="form-control" value="{{ profile.research_interests }}" placeholder="e.g. Machine Learning, NLP…">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Website / LinkedIn</label>
+              <input type="url" name="website" class="form-control" value="{{ profile.website }}" placeholder="https://…">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Bio <span class="text-muted fw-normal">(max 500 chars)</span></label>
+              <textarea name="bio" class="form-control" maxlength="500" placeholder="Tell us about your research…">{{ profile.bio }}</textarea>
+              <div class="form-text text-end text-muted" style="font-size:.75rem;" id="bioCount">{{ profile.bio|length }}/500</div>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-600">
+                <i class="fas fa-save me-2"></i>Save Changes
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
 
       <!-- Quick Actions -->
       <div class="profile-card">
         <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
         <div class="d-grid gap-2">
-          <a href="{% url 'home' %}" class="btn btn-primary-custom">
-            <i class="fas fa-upload me-2"></i>Analyze New Paper
-          </a>
-          <a href="{% url 'library' %}" class="btn btn-secondary-custom">
-            <i class="fas fa-folder-open me-2"></i>View Library
-          </a>
-          <a href="{% url 'compare' %}" class="btn btn-secondary-custom">
-            <i class="fas fa-balance-scale me-2"></i>Compare Papers
-          </a>
+          <a href="{% url 'upload' %}" class="btn btn-primary rounded-pill"><i class="fas fa-upload me-2"></i>Analyze New Paper</a>
+          <a href="{% url 'library' %}" class="btn btn-outline-secondary rounded-pill"><i class="fas fa-folder-open me-2"></i>View Library</a>
+          <a href="{% url 'compare' %}" class="btn btn-outline-secondary rounded-pill"><i class="fas fa-balance-scale me-2"></i>Compare Papers</a>
+          <a href="{% url 'forgot_password' %}" class="btn btn-outline-secondary rounded-pill"><i class="fas fa-key me-2"></i>Change Password</a>
         </div>
       </div>
     </div>
 
-    <!-- Recent Papers -->
-    <div class="col-lg-8">
+    <!-- ── Recent Papers ── -->
+    <div class="col-lg-7">
       <div class="profile-card">
-        <h5><i class="fas fa-file-pdf"></i> Your Recent Papers</h5>
-
-        {% if documents %} {% for doc in documents|slice:":10" %}
-        <a href="{% url 'result' doc.id %}" class="paper-item">
-          <div class="paper-title">
-            <i class="fas fa-file-pdf me-2 text-danger"></i>
-            {{ doc.title|truncatechars:60 }}
-          </div>
-          <div class="paper-meta">
-            <i class="fas fa-calendar me-1"></i>{{ doc.created_at|date:"M d, Y" }}
-            <span class="ms-3"
-              ><i class="fas fa-font me-1"></i>{{ doc.word_count|default:0 }}
-              words</span
-            >
-          </div>
-        </a>
-        {% endfor %} {% if documents.count > 10 %}
-        <a
-          href="{% url 'library' %}"
-          class="btn btn-outline-primary w-100 mt-2"
-        >
-          View All {{ documents.count }} Papers
-        </a>
-        {% endif %} {% else %}
-        <div class="empty-state">
-          <i class="fas fa-inbox"></i>
-          <h5>No papers yet</h5>
-          <p>Analyze your first research paper to get started!</p>
-          <a href="{% url 'home' %}" class="btn btn-primary mt-2">
-            <i class="fas fa-upload me-2"></i>Analyze Paper
-          </a>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="fas fa-file-pdf"></i> Your Recent Papers</h5>
+          {% if documents.count > 10 %}
+          <a href="{% url 'library' %}" class="btn btn-sm btn-link text-primary fw-700 text-decoration-none p-0">View All <i class="fas fa-arrow-right ms-1"></i></a>
+          {% endif %}
         </div>
+        {% if documents %}
+          {% for doc in documents|slice:":10" %}
+          <a href="{% url 'result' doc.id %}" class="paper-item">
+            <div class="paper-title">
+              <i class="fas fa-{% if doc.input_type == 'pdf' %}file-pdf text-danger{% elif doc.input_type == 'url' %}globe text-success{% else %}align-left text-primary{% endif %} me-2"></i>
+              {{ doc.title|truncatechars:65 }}
+            </div>
+            <div class="paper-meta">
+              <i class="fas fa-calendar me-1"></i>{{ doc.created_at|date:"M d, Y" }}
+              <span class="ms-3"><i class="fas fa-font me-1"></i>{{ doc.word_count|default:0|intcomma }} words</span>
+            </div>
+          </a>
+          {% endfor %}
+          {% if documents.count > 10 %}
+          <a href="{% url 'library' %}" class="btn btn-outline-primary w-100 mt-2 rounded-pill">View All {{ documents.count }} Papers</a>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-5">
+            <div class="mb-3 opacity-20"><i class="fas fa-inbox fa-4x"></i></div>
+            <h6 class="text-muted">No papers yet</h6>
+            <p class="small text-muted mb-3">Analyze your first research paper to get started!</p>
+            <a href="{% url 'upload' %}" class="btn btn-primary rounded-pill px-4"><i class="fas fa-upload me-2"></i>Analyze Paper</a>
+          </div>
         {% endif %}
       </div>
     </div>
+
   </div>
 </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Avatar preview
+document.getElementById('avatarInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const preview = document.getElementById('avatarPreview');
+    preview.innerHTML = `<img src="${ev.target.result}" alt="avatar" style="width:100%;height:100%;object-fit:cover;">`;
+  };
+  reader.readAsDataURL(file);
+});
+
+// Bio character counter
+const bioArea = document.querySelector('textarea[name="bio"]');
+const bioCount = document.getElementById('bioCount');
+if(bioArea && bioCount){
+  bioArea.addEventListener('input', function(){
+    bioCount.textContent = `${this.value.length}/500`;
+  });
+}
+</script>
 {% endblock %}
