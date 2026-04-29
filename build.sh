@@ -22,7 +22,12 @@ python manage.py collectstatic --no-input --clear
 echo "✓ Static files collected"
 
 echo ""
-echo "=== Step 4: Downloading NLTK data ==="
+echo "=== Step 4: Creating superuser ==="
+python manage.py create_superuser_auto
+echo "✓ Superuser ready"
+
+echo ""
+echo "=== Step 5: Downloading NLTK data ==="
 python -c "
 import nltk
 import ssl
