@@ -27,7 +27,7 @@ from .models import Document, AnalysisResult, PlagiarismCheck, AnalysisFeedback,
 from .plagiarism import local_library_similarity
 from .forms import DocumentUploadForm, CustomRegistrationForm, EmailLoginForm
 from .ml_model import ml_processor
-from .pdf_processor import get_pdf_processor
+from .pdf_processor import get_pdf_processor, extract_word_text, is_word_file, is_pdf_file
 from .url_scraper import url_scraper
 from .export_manager import export_manager
 # from analyzer.utils.groq import analyze_text_with_groq
@@ -137,7 +137,7 @@ MAX_PDF_STORE_BYTES = int(os.getenv("MAX_STORE_PDF_MB", "16")) * 1024 * 1024
 MAX_PDF_UPLOAD_BYTES = 52 * 1024 * 1024  # 52 MB - keep consistent with settings.py
 
 def validate_pdf_file(file):
-    """Validate uploaded PDF file safely"""
+    """Validate uploaded PDF or Word file safely"""
     if not file:
         logger.warning("validate_pdf_file: No file provided")
         return False, "No file provided"
@@ -148,9 +148,10 @@ def validate_pdf_file(file):
         return False, "Invalid file uploaded"
 
     # Check extension
-    if not file.name.lower().endswith('.pdf'):
-        logger.warning(f"validate_pdf_file: Not a PDF - filename: {file.name}")
-        return False, "Only PDF files are allowed"
+    fname = file.name.lower()
+    if not (fname.endswith('.pdf') or fname.endswith('.docx') or fname.endswith('.doc')):
+        logger.warning(f"validate_pdf_file: Unsupported format - filename: {file.name}")
+        return False, "Only PDF and Word (.docx, .doc) files are allowed"
 
     # Check size
     file_size = getattr(file, 'size', 0)
@@ -353,24 +354,50 @@ def analyze_document(request):
     # Log incoming request for easier debugging
     logger.info(f"Analyze request received - Method: {request.method}, Content-Type: {request.content_type}")
     logger.info(f"POST keys: {list(request.POST.keys())}")
+    logger.info(f"POST values: {dict(request.POST)}")
     logger.info(f"FILES keys: {list(request.FILES.keys())}")
+    logger.info(f"FILES values: {dict(request.FILES)}")
+    logger.info(f"Request META content length: {request.META.get('CONTENT_LENGTH', 'Not set')}")
+    logger.info(f"Request META content type: {request.META.get('CONTENT_TYPE', 'Not set')}")
 
     try:
         input_type = request.POST.get('input_type', 'pdf').strip().lower()
+        logger.info(f"Processing input_type: {input_type}")
+        
+        # Debug: log what files are received
+        logger.info(f"FILES keys: {list(request.FILES.keys())}")
+        
+        # Debug: check each input type
+        if input_type == 'pdf':
+            logger.info(f"pdf_file in FILES: {'pdf_file' in request.FILES}")
+        elif input_type == 'bulk':
+            logger.info(f"bulk_files in FILES: {'bulk_files' in request.FILES}")
+        elif input_type == 'url':
+            logger.info(f"url_input in POST: {'url_input' in request.POST}")
 
         content = None
         title = "Analyzed Document"
         document_input_type = 'pdf'
         url_source = None
+        result = None  # Will hold scraper/processor result dict
 
         # =========================
         # 📄 PDF UPLOAD
         # =========================
         if input_type == 'pdf':
             uploaded_file: UploadedFile = request.FILES.get('pdf_file')
+            logger.info(f"PDF upload attempt - uploaded_file: {uploaded_file}")
 
             if not uploaded_file:
-                return JsonResponse({'error': 'No PDF file uploaded'}, status=400)
+                logger.warning("No PDF file uploaded - returning error")
+                return JsonResponse({
+                    'error': 'No PDF file uploaded. Please select a PDF file before submitting.',
+                    'debug_info': {
+                        'input_type': input_type,
+                        'files_received': list(request.FILES.keys()),
+                        'post_data': list(request.POST.keys())
+                    }
+                }, status=400)
 
             # Validate file
             is_valid, error_msg = validate_pdf_file(uploaded_file)
@@ -378,49 +405,185 @@ def analyze_document(request):
                 logger.warning(f"PDF validation failed: {error_msg}")
                 return JsonResponse({'error': error_msg}, status=400)
 
-            # Process PDF
-            processor = get_pdf_processor()
-            result = processor.extract_text(uploaded_file)
+            # Process PDF or Word
+            if is_word_file(uploaded_file.name):
+                result = extract_word_text(uploaded_file)
+            else:
+                processor = get_pdf_processor()
+                result = processor.extract_text(uploaded_file)
 
             if not result.get('success'):
-                logger.error(f"PDF extraction failed: {result.get('error')}")
-                return JsonResponse({'error': 'Failed to extract text from PDF'}, status=400)
+                logger.error(f"File extraction failed: {result.get('error')}")
+                return JsonResponse({'error': result.get('error', 'Failed to extract text from file')}, status=400)
 
             content = result.get('text', '')[:ANALYSIS_TEXT_MAX]
+            
+            # Validate content length
+            if not content or len(content.strip()) < 30:
+                logger.warning(f"Content validation failed - content length: {len(content) if content else 0}")
+                return JsonResponse({
+                    'error': f'Not enough content extracted from the file (minimum 30 characters). Extracted: {len(content) if content else 0} characters. This may be a scanned PDF or image-based document that requires OCR.'
+                }, status=400)
 
         # =========================
-        # 🌐 URL INPUT
+        # 📄 BULK PDF UPLOAD
         # =========================
+        elif input_type == 'bulk':
+            bulk_files = request.FILES.getlist('bulk_files')
+            
+            if not bulk_files:
+                return JsonResponse({'error': 'No files uploaded for bulk processing'}, status=400)
+            
+            if len(bulk_files) > 5:
+                return JsonResponse({'error': 'Maximum 5 files allowed for bulk upload'}, status=400)
+            
+            # Process all files - create separate documents for each
+            processor = get_pdf_processor()
+            document_ids = []
+            
+            for idx, uploaded_file in enumerate(bulk_files):
+                # Validate file
+                is_valid, error_msg = validate_pdf_file(uploaded_file)
+                if not is_valid:
+                    logger.warning(f"PDF validation failed: {error_msg}")
+                    return JsonResponse({'error': f'File {uploaded_file.name}: {error_msg}'}, status=400)
+
+                # Process PDF or Word
+                if is_word_file(uploaded_file.name):
+                    result = extract_word_text(uploaded_file)
+                else:
+                    result = processor.extract_text(uploaded_file)
+
+                if not result.get('success'):
+                    logger.error(f"File extraction failed: {result.get('error')}")
+                    return JsonResponse({'error': f'Failed to extract text from {uploaded_file.name}: {result.get("error", "")}'}, status=400)
+
+                content = result.get('text', '')[:ANALYSIS_TEXT_MAX]
+                
+                # Validate content length
+                if not content or len(content.strip()) < 30:
+                    logger.warning(f"Content validation failed for {uploaded_file.name} - content length: {len(content) if content else 0}")
+                    return JsonResponse({
+                        'error': f'Not enough content extracted from {uploaded_file.name} (minimum 30 characters). Extracted: {len(content) if content else 0} characters. This may be a scanned PDF or image-based document.'
+                    }, status=400)
+                
+                title = f"Bulk Upload - {uploaded_file.name}"
+                
+                # Create document for each file
+                document = Document.objects.create(
+                    user=request.user,
+                    input_type='pdf',
+                    title=title,
+                    content=content,
+                    url=None,
+                    word_count=len(content.split())
+                )
+                document_ids.append(document.id)
+                
+                # Process analysis for this document
+                try:
+                    analysis_data = analyze_text_with_groq(content)
+                except Exception as e:
+                    logger.warning(f"Groq failed: {e}")
+                    try:
+                        analysis_data = ml_processor.full_analysis(content)
+                    except Exception as fallback_e:
+                        logger.error(f"Fallback ML also failed: {fallback_e}")
+                        analysis_data = {
+                            'summary': 'Analysis could not be completed due to technical issues.',
+                            'abstract': '', 'keywords': [], 'methodology': [],
+                            'technologies': [], 'goal': '', 'impact': '',
+                            'publication_year': '', 'authors': [],
+                            'statistics': {'word_count': len(content.split()), 'unique_words': 0},
+                            'research_gaps': [], 'conclusion': ''
+                        }
+
+                # Plagiarism check
+                plagiarism = local_library_similarity(document.id, content, user=request.user)
+
+                PlagiarismCheck.objects.create(
+                    document=document,
+                    similarity_score=plagiarism.get("similarity_percent", 0) / 100.0,
+                )
+
+                # Save analysis result with same fields as single upload
+                AnalysisResult.objects.create(
+                    document=document,
+                    summary=analysis_data.get('summary', ''),
+                    abstract=analysis_data.get('abstract', ''),
+                    keywords=analysis_data.get('keywords', []),
+                    methodology=analysis_data.get('methodology', []),
+                    technologies=analysis_data.get('technologies', []),
+                    goal=analysis_data.get('goal', ''),
+                    impact=analysis_data.get('impact', ''),
+                    publication_year=analysis_data.get('publication_year', ''),
+                    authors=analysis_data.get('authors', []),
+                    word_count=analysis_data.get('statistics', {}).get('word_count', 0),
+                    unique_words=analysis_data.get('statistics', {}).get('unique_words', 0),
+                    extracted_links=result.get('extracted_links', []),
+                    references=getattr(ml_processor, 'extract_references', lambda x: [])(content),
+                    extras={
+                        'plagiarism': plagiarism,
+                        'research_gaps': analysis_data.get('research_gaps', []),
+                        'conclusion': analysis_data.get('conclusion', ''),
+                        'extracted_images': result.get('extracted_images', [])
+                    }
+                )
+            
+            logger.info(f"Bulk processing completed: {len(document_ids)} documents for user {request.user.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Analysis of {len(document_ids)} papers complete! Redirecting to first result...',
+                'document_id': document_ids[0],
+                'redirect_url': f'/result/{document_ids[0]}/'
+            })
+
+
+
         elif input_type == 'url':
             url_input = request.POST.get('url_input', '').strip()
 
             if not url_input:
                 return JsonResponse({'error': 'No URL provided'}, status=400)
 
-            try:
-                result = url_scraper.scrape(url_input)
-                if not result.get('success'):
-                    error = result.get("error", "Unknown error")
-                    logger.warning(f"URL scraping failed: {error}")
-                    return JsonResponse({'error': f'Failed to scrape URL: {error}'}, status=400)
+            if not url_input.startswith(('http://', 'https://')):
+                return JsonResponse({'error': 'URL must start with http:// or https://'}, status=400)
 
-                content = result.get('text', '')[:ANALYSIS_TEXT_MAX]
+            try:
+                scrape_result = url_scraper.scrape(url_input)
+                if not scrape_result.get('success'):
+                    error_msg = scrape_result.get('error', 'Unknown error')
+                    logger.warning(f"URL scraping failed for {url_input}: {error_msg}")
+                    # If the scraper already returned a user-friendly message, use it directly
+                    if 'not supported' in error_msg.lower() or 'please provide' in error_msg.lower():
+                        return JsonResponse({'error': error_msg}, status=400)
+                    return JsonResponse({
+                        'error': f'Could not extract content from this URL. The site may block automated access. Try downloading the PDF directly instead. Details: {error_msg}'
+                    }, status=400)
+
+                # URL Scraper may return 'content' or 'text' key
+                raw_text = scrape_result.get('content') or scrape_result.get('text') or ''
+                content = raw_text[:ANALYSIS_TEXT_MAX]
                 url_source = url_input
                 document_input_type = 'url'
+                title = scrape_result.get('title') or 'Analyzed URL Paper'
+                result = scrape_result  # keep reference for later
 
             except Exception as e:
-                logger.error(f"URL scraping exception: {e}", exc_info=True)
+                logger.error(f"URL scraping exception for {url_input}: {e}", exc_info=True)
                 return JsonResponse({'error': f'URL processing failed: {str(e)}'}, status=400)
 
         else:
-            return JsonResponse({'error': 'Invalid input type. Use "pdf" or "url"'}, status=400)
+            return JsonResponse({'error': 'Invalid input type. Use "pdf", "url", or "bulk"'}, status=400)
 
         # =========================
         # CONTENT VALIDATION
         # =========================
         if not content or len(content.strip()) < 30:
+            logger.warning(f"Content validation failed - content length: {len(content) if content else 0}")
             return JsonResponse({
-                'error': 'Not enough content extracted from the document (minimum 30 characters)'
+                'error': f'Not enough content extracted from the document (minimum 30 characters). Extracted: {len(content) if content else 0} characters. This may be a scanned PDF or image-based document.'
             }, status=400)
 
         # =========================
@@ -448,39 +611,28 @@ def analyze_document(request):
             word_count=len(content.split())
         )
 
-        # =========================
-               # =========================
-        # AI ANALYSIS (Fixed - No more crash)
+        # AI ANALYSIS
         # =========================
         try:
             analysis_data = analyze_text_with_groq(content)
-            logger.info("✅ Groq analysis completed successfully")
+            logger.info("Groq analysis completed successfully")
         except Exception as e:
             logger.warning(f"Groq failed: {e}")
             try:
                 analysis_data = ml_processor.full_analysis(content)
-                logger.info("✅ Used fallback ML analysis")
             except Exception as fallback_e:
                 logger.error(f"Fallback ML also failed: {fallback_e}")
-                # Safe default values
                 analysis_data = {
                     'summary': 'Analysis could not be completed due to technical issues.',
-                    'abstract': '',
-                    'keywords': [],
-                    'methodology': [],
-                    'technologies': [],
-                    'goal': '',
-                    'impact': '',
-                    'publication_year': '',
-                    'authors': [],
+                    'abstract': '', 'keywords': [], 'methodology': [],
+                    'technologies': [], 'goal': '', 'impact': '',
+                    'publication_year': '', 'authors': [],
                     'statistics': {'word_count': len(content.split()), 'unique_words': 0},
-                    'research_gaps': [],
-                    'conclusion': ''
+                    'research_gaps': [], 'conclusion': ''
                 }
-
-        # Extra safety check (very important)
+        
+        # Extra safety check
         if isinstance(analysis_data, str):
-            logger.warning("Fallback returned string instead of dictionary")
             analysis_data = {
                 'summary': str(analysis_data)[:1000],
                 'abstract': '',
@@ -495,9 +647,8 @@ def analyze_document(request):
                 'research_gaps': [],
                 'conclusion': ''
             }
-        # =========================
+
         # PLAGIARISM CHECK
-        # =========================
         plagiarism = local_library_similarity(document.id, content, user=request.user)
 
         PlagiarismCheck.objects.create(
@@ -505,9 +656,11 @@ def analyze_document(request):
             similarity_score=plagiarism.get("similarity_percent", 0) / 100.0,
         )
 
-        # =========================
+        # Safely get extracted links and images
+        pdf_extracted_links = result.get('extracted_links', []) if result else []
+        pdf_extracted_images = result.get('extracted_images', []) if result and input_type == 'pdf' else []
+
         # SAVE ANALYSIS RESULT
-        # =========================
         analysis = AnalysisResult.objects.create(
             document=document,
             summary=analysis_data.get('summary', ''),
@@ -521,16 +674,15 @@ def analyze_document(request):
             authors=analysis_data.get('authors', []),
             word_count=analysis_data.get('statistics', {}).get('word_count', 0),
             unique_words=analysis_data.get('statistics', {}).get('unique_words', 0),
-            extracted_links=getattr(ml_processor, 'extract_links', lambda x: [])(content),
+            extracted_links=pdf_extracted_links,
             references=getattr(ml_processor, 'extract_references', lambda x: [])(content),
             extras={
                 'plagiarism': plagiarism,
                 'research_gaps': analysis_data.get('research_gaps', []),
                 'conclusion': analysis_data.get('conclusion', ''),
+                'extracted_images': pdf_extracted_images
             }
         )
-
-        logger.info(f"Document analysis completed successfully for user {request.user.id} - Doc ID: {document.id}")
 
         return JsonResponse({
             'success': True,
@@ -562,8 +714,12 @@ def profile(request):
 
     if request.method == 'POST':
         # Update User fields
-        user.first_name = request.POST.get('first_name', user.first_name).strip()
-        user.last_name = request.POST.get('last_name', user.last_name).strip()
+        full_name = request.POST.get('full_name', '').strip()
+        if full_name:
+            name_parts = full_name.split(' ', 1)
+            user.first_name = name_parts[0]
+            user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
         new_email = request.POST.get('email', user.email).strip().lower()
 
         if new_email != user.email:
@@ -629,6 +785,7 @@ def dashboard(request):
 
     # Total papers
     total_papers = Document.objects.filter(user=user).count()
+
 
     # Recent activity for sidebar
     recent_activity = Document.objects.filter(user=user).order_by('-created_at')[:5]
@@ -782,24 +939,29 @@ def forgot_password(request):
     from .otp_utils import create_and_send_otp
 
     if request.method == 'POST':
-        email = request.POST.get('email', '').strip()
+        email = request.POST.get('email', '').strip().lower()
 
         if not email:
             messages.error(request, 'Please enter your email address.')
             return redirect('forgot_password')
 
         try:
-            User.objects.get(email=email)
-            
-            # Send OTP with better error handling
-            success, email_sent = create_and_send_otp(email)
+            User.objects.get(email__iexact=email)
 
-            if email_sent:
+            # Create OTP (always succeeds if DB is up)
+            reset_otp, email_sent = create_and_send_otp(email)
+
+            if reset_otp is not None:
+                # OTP was created — store email in session and redirect to verify page
                 request.session['reset_email'] = email
-                messages.success(request, f'OTP sent successfully to {email}. Please check your inbox.')
+                if email_sent:
+                    messages.success(request, f'An OTP has been sent to {email}. Check your inbox.')
+                else:
+                    # Simulator mode: OTP printed to server console
+                    messages.success(request, f'OTP generated for {email}. (Check server console if running locally.)')
                 return redirect('verify_otp')
             else:
-                messages.error(request, 'Could not send OTP. Please try again later or contact support.')
+                messages.error(request, 'Could not generate OTP. Please try again later.')
                 return redirect('forgot_password')
 
         except User.DoesNotExist:
@@ -807,7 +969,7 @@ def forgot_password(request):
             return redirect('forgot_password')
         except Exception as e:
             logger.error(f"Forgot password error: {e}", exc_info=True)
-            messages.error(request, 'An error occurred while sending OTP. Please try again.')
+            messages.error(request, 'An error occurred. Please try again.')
             return redirect('forgot_password')
 
     return render(request, 'analyzer/forgot_password.html')
@@ -953,7 +1115,7 @@ def compare_papers(request, doc1_id, doc2_id):
     p1_data = {
         'id': doc1.id,
         'title': doc1.title or 'Untitled',
-        'authors': ', '.join(analysis1.authors) if analysis1 and analysis1.authors else 'Unknown',
+        'authors': ', '.join(to_list(analysis1.authors)) if analysis1 else 'Unknown',
         'publication_date': analysis1.publication_year if analysis1 else 'Unknown',
         'word_count': analysis1.word_count if analysis1 else doc1.word_count,
         'abstract': (analysis1.abstract or 'No abstract available') if analysis1 else 'No content',
@@ -966,7 +1128,7 @@ def compare_papers(request, doc1_id, doc2_id):
     p2_data = {
         'id': doc2.id,
         'title': doc2.title or 'Untitled',
-        'authors': ', '.join(analysis2.authors) if analysis2 and analysis2.authors else 'Unknown',
+        'authors': ', '.join(to_list(analysis2.authors)) if analysis2 else 'Unknown',
         'publication_date': analysis2.publication_year if analysis2 else 'Unknown',
         'word_count': analysis2.word_count if analysis2 else doc2.word_count,
         'abstract': (analysis2.abstract or 'No abstract available') if analysis2 else 'No content',
@@ -1332,3 +1494,99 @@ def submit_feedback(request, document_id):
 def health_check(request):
     """Health check endpoint"""
     return JsonResponse({'status': 'ok', 'version': '1.0'})
+
+
+@login_required
+def save_notes(request, document_id):
+    """Save notes for a document"""
+    document = get_object_or_404(Document, id=document_id, user=request.user)
+    
+    if request.method == 'POST':
+        notes = request.POST.get('notes', '')
+        document.notes = notes
+        document.save()
+        return JsonResponse({'success': True, 'notes': notes})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
+
+
+@login_required
+def add_tag(request, document_id):
+    """Add a tag to a document"""
+    document = get_object_or_404(Document, id=document_id, user=request.user)
+    
+    if request.method == 'POST':
+        new_tag = request.POST.get('tag', '').strip()
+        if not new_tag:
+            return JsonResponse({'success': False, 'error': 'Tag cannot be empty'}, status=400)
+        
+        current_tags = document.tags or []
+        if new_tag not in current_tags:
+            current_tags.append(new_tag)
+            document.tags = current_tags
+            document.save()
+        
+        return JsonResponse({'success': True, 'tags': current_tags})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
+
+
+@login_required
+def remove_tag(request, document_id):
+    """Remove a tag from a document"""
+    document = get_object_or_404(Document, id=document_id, user=request.user)
+    
+    if request.method == 'POST':
+        tag = request.POST.get('tag', '').strip()
+        current_tags = document.tags or []
+        
+        if tag in current_tags:
+            current_tags.remove(tag)
+            document.tags = current_tags
+            document.save()
+        
+        return JsonResponse({'success': True, 'tags': current_tags})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
+
+
+@login_required
+def similar_papers(request, document_id):
+    """Find similar papers based on keywords and content"""
+    document = get_object_or_404(Document, id=document_id, user=request.user)
+    analysis = getattr(document, 'analysis', None)
+    
+    if not analysis or not analysis.keywords:
+        return JsonResponse({'success': False, 'error': 'No keywords found'}, status=400)
+    
+    # Get keywords from current document
+    keywords = analysis.keywords[:10]
+    
+    # Find other documents with similar keywords
+    similar_docs = []
+    user_docs = Document.objects.filter(user=request.user).exclude(id=document_id)
+    
+    for doc in user_docs:
+        doc_analysis = getattr(doc, 'analysis', None)
+        if doc_analysis and doc_analysis.keywords:
+            # Calculate keyword overlap
+            doc_keywords = set(doc_analysis.keywords[:10])
+            current_keywords = set(keywords)
+            overlap = len(doc_keywords.intersection(current_keywords))
+            
+            if overlap >= 2:
+                similar_docs.append({
+                    'id': doc.id,
+                    'title': doc.title[:100],
+                    'match_count': overlap,
+                    'keywords': doc_analysis.keywords[:5],
+                })
+    
+    # Sort by match count
+    similar_docs.sort(key=lambda x: x['match_count'], reverse=True)
+    
+    return JsonResponse({
+        'success': True,
+        'similar': similar_docs[:5],
+        'current_keywords': keywords
+    })

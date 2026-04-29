@@ -14,6 +14,7 @@
     font-size: 1.75rem;
     font-weight: 700;
     margin: 0;
+    color: white;
   }
   .library-header p {
     margin: 0.5rem 0 0;
@@ -185,7 +186,7 @@
   <!-- Search and Filter -->
   <div class="card p-3 mb-4">
     <div class="row g-3 align-items-center">
-      <div class="col-md-6">
+      <div class="col-md-5">
         <div class="search-box">
           <i class="fas fa-search"></i>
           <input
@@ -196,7 +197,10 @@
           />
         </div>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-4">
+        <input type="text" id="tagFilter" class="form-control" placeholder="Filter by tag...">
+      </div>
+      <div class="col-md-3">
         <div class="d-flex gap-2 flex-wrap justify-content-md-end">
           <button
             class="filter-btn {% if not input_type_filter %}active{% endif %}"
@@ -399,6 +403,11 @@
             
             // Hide modal first
             if (deleteModalInstance) deleteModalInstance.hide();
+
+            // Reset button and state immediately so next delete works
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash-alt me-2"></i>Delete';
+            deleteDocId = null;
             
             if (cardWrapper) {
               cardWrapper.style.transition = "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
@@ -415,6 +424,7 @@
                 }
               }, 400);
             } else {
+              isDeleting = false;
               window.location.reload();
             }
           } else {

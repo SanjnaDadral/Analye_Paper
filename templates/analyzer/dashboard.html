@@ -8,30 +8,6 @@
     --glass-border: rgba(255,255,255,0.45);
     --glass-shadow: 0 8px 32px rgba(31,38,135,0.07);
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --glass-bg: rgba(30, 41, 59, 0.7);
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-    .stat-value, .section-title, .recent-item-info h6, .quick-stat-value {
-      color: var(--text-primary) !important;
-    }
-    .stat-label, .recent-item-info small, .quick-stat-label {
-      color: var(--text-muted) !important;
-    }
-    .recent-item {
-      background: rgba(30, 41, 59, 0.5) !important;
-    }
-    .recent-item:hover {
-      background: rgba(45, 55, 72, 0.7) !important;
-    }
-    .keyword-tag, .quick-link-btn {
-      background: rgba(30, 41, 59, 0.8) !important;
-      border-color: var(--border-color) !important;
-      color: var(--text-secondary) !important;
-    }
-  }
   .dashboard-wrapper {
     min-height: calc(100vh - 70px);
     padding-top: 1rem;
@@ -161,10 +137,10 @@
           {% endif %}
         </div>
         <div>
-          <h2 class="mb-1 fw-bold" style="font-size:1.5rem;">Hello, {{ display_name }}! 👋</h2>
+          <h2 class="mb-1 fw-bold" style="font-size:1.5rem; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">Hello, {{ display_name|default:"User" }}! 👋</h2>
           <div class="d-flex flex-wrap gap-3 opacity-90 mt-1">
-            <span class="small d-flex align-items-center gap-1"><i class="fas fa-envelope"></i> {{ user.email }}</span>
-            <span class="small d-flex align-items-center gap-1"><i class="fas fa-calendar-check"></i> Member since {{ member_since|date:"M Y" }}</span>
+            <span class="small d-flex align-items-center gap-1"><i class="fas fa-envelope"></i> {{ user.email|default:"No email provided" }}</span>
+            <span class="small d-flex align-items-center gap-1"><i class="fas fa-calendar-check"></i> Member since {% if member_since %}{{ member_since|date:"M Y" }}{% else %}Recently{% endif %}</span>
           </div>
         </div>
       </div>

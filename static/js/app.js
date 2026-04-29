@@ -6,9 +6,12 @@
 let currentAnalysisData = null;
 
 document.addEventListener("DOMContentLoaded", function () {
-  initInputMethodToggle();
-  initFileUpload();
-  initAnalyzeForm();
+  // Page-specific initialization is now handled by the pages themselves
+  // initInputMethodToggle();
+  // Page-specific initialization is handled in individual templates
+  // initInputMethodToggle();
+  // initFileUpload();
+  // initAnalyzeForm();
   initDeleteButtons();
   initExportButtons();
   initEmailModal();
@@ -194,8 +197,16 @@ function initAnalyzeForm() {
     }
 
     function resetButton() {
-      submitBtn.disabled = false;
-      btnText.textContent = "Analyze with AI";
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        btnText.textContent = "Analyze with AI";
+      } else {
+        const btn = document.getElementById("submitBtn");
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-wand-magic-sparkles me-2"></i>Analyze Paper';
+        }
+      }
     }
 
     const inputType =
@@ -224,20 +235,26 @@ function initAnalyzeForm() {
         return;
       }
       formData.append("url_input", urlInput);
+    } else if (inputType === "bulk") {
+      const bulkInput = document.querySelector("#bulkFiles");
+      if (!bulkInput.files || bulkInput.files.length === 0) {
+        showToast("Please select PDF files for bulk upload", "error");
+        return;
+      }
+      for (let i = 0; i < bulkInput.files.length; i++) {
+        formData.append("bulk_files", bulkInput.files[i]);
+      }
     }
     if (submitBtn) {
       submitBtn.disabled = true;
-    }
-
-    if (btnText) {
       btnText.innerHTML = '<span class="loading-spinner"></span> Analyzing...';
+    } else {
+      const btn = document.getElementById("submitBtn");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
+      }
     }
-    // submitBtn.disabled = true;
-    // btnText.innerHTML = '<span class="loading-spinner"></span> Analyzing...';
-    // setStatus(
-    //   "Analysis in progress... Extracting and analyzing content, please wait.",
-    //   "info",
-    // );
 
     showLoadingOverlay();
 

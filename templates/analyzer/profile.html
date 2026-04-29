@@ -134,13 +134,9 @@
           <input type="file" id="avatarInput" name="avatar" accept="image/*" class="d-none">
 
           <div class="row g-3">
-            <div class="col-6">
-              <label class="form-label">First Name</label>
-              <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}" placeholder="First name">
-            </div>
-            <div class="col-6">
-              <label class="form-label">Last Name</label>
-              <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" placeholder="Last name">
+            <div class="col-12">
+              <label class="form-label">Full Name</label>
+              <input type="text" name="full_name" class="form-control" value="{{ user.first_name }} {{ user.last_name }}" placeholder="Your full name">
             </div>
             <div class="col-12">
               <label class="form-label">Email Address</label>
@@ -151,14 +147,7 @@
               <label class="form-label">Institution / University</label>
               <input type="text" name="institution" class="form-control" value="{{ profile.institution }}" placeholder="e.g. MIT, Stanford…">
             </div>
-            <div class="col-12">
-              <label class="form-label">Research Interests</label>
-              <input type="text" name="research_interests" class="form-control" value="{{ profile.research_interests }}" placeholder="e.g. Machine Learning, NLP…">
-            </div>
-            <div class="col-12">
-              <label class="form-label">Website / LinkedIn</label>
-              <input type="url" name="website" class="form-control" value="{{ profile.website }}" placeholder="https://…">
-            </div>
+
             <div class="col-12">
               <label class="form-label">Bio <span class="text-muted fw-normal">(max 500 chars)</span></label>
               <textarea name="bio" class="form-control" maxlength="500" placeholder="Tell us about your research…">{{ profile.bio }}</textarea>

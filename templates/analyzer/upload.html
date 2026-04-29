@@ -1,96 +1,321 @@
 {% extends 'analyzer/base.html' %}
 {% load static %}
 {% block title %}Analyze Paper - PaperAIzer{% endblock %}
+
 {% block extra_css %}
 <style>
   .upload-header {
     background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
     color: white;
-    padding: 2.5rem 2rem;
+    padding: 3rem 2rem;
     border-radius: 20px;
     margin-bottom: 2rem;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(99,102,241,0.25);
+    box-shadow: 0 15px 40px rgba(99,102,241,0.25);
   }
-  .upload-header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
-  .upload-header p { opacity: 0.9; margin: 0; }
+  
+  .upload-header h1 { 
+    font-size: 2rem; 
+    font-weight: 700; 
+    margin-bottom: 0.75rem;
+    font-family: 'Sora', sans-serif;
+    color: white;
+  }
+  
+  .upload-header p { 
+    opacity: 0.95; 
+    margin: 0; 
+    font-size: 1.1rem;
+  }
 
-  .method-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .method-tabs { 
+    display: flex; 
+    gap: 0.75rem; 
+    margin-bottom: 2rem; 
+    flex-wrap: wrap;
+  }
+  
   .method-tab {
-    flex: 1; padding: 0.85rem 1rem;
-    border: 2px solid #e2e8f0; background: white;
-    color: #64748b; cursor: pointer; font-weight: 600;
-    transition: all 0.2s; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-    font-size: 0.9rem;
+    flex: 1; 
+    min-width: 140px;
+    padding: 1rem 1.25rem;
+    border: 2px solid #e2e8f0; 
+    background: white;
+    color: #64748b; 
+    cursor: pointer; 
+    font-weight: 600;
+    transition: all 0.3s ease; 
+    border-radius: 12px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 0.5rem;
+    font-size: 0.95rem;
   }
+  
   .method-tab.active {
-    border-color: #6366f1; background: linear-gradient(135deg,rgba(99,102,241,0.08),rgba(236,72,153,0.05));
+    border-color: #6366f1; 
+    background: linear-gradient(135deg,rgba(99,102,241,0.1),rgba(236,72,153,0.05));
     color: #6366f1;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99,102,241,0.15);
   }
-  .method-tab:hover:not(.active) { border-color: #a5b4fc; color: #6366f1; }
+  
+  .method-tab:hover:not(.active) { 
+    border-color: #a5b4fc; 
+    color: #6366f1; 
+    transform: translateY(-1px);
+  }
 
   .upload-zone {
-    border: 2px dashed #cbd5e1; border-radius: 14px;
-    padding: 3rem 2rem; text-align: center; cursor: pointer;
-    transition: all 0.25s; background: #f8fafc;
+    border: 3px dashed #cbd5e1; 
+    border-radius: 16px;
+    padding: 4rem 2rem; 
+    text-align: center; 
+    cursor: pointer;
+    transition: all 0.3s ease; 
+    background: #f8fafc;
+    position: relative;
+    overflow: hidden;
   }
-  .upload-zone:hover { border-color: #6366f1; background: rgba(99,102,241,0.04); }
-  .upload-zone i { font-size: 2.5rem; color: #6366f1; margin-bottom: 0.75rem; display: block; }
-  .upload-zone h5 { font-weight: 700; color: #1e293b; margin-bottom: 0.4rem; }
-  .upload-zone p { color: #64748b; margin: 0; font-size: 0.9rem; }
+  
+  .upload-zone:hover { 
+    border-color: #6366f1; 
+    background: rgba(99,102,241,0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(99,102,241,0.1);
+  }
+  
+  .upload-zone i { 
+    font-size: 3rem; 
+    color: #6366f1; 
+    margin-bottom: 1rem; 
+    display: block; 
+  }
+  
+  .upload-zone h5 { 
+    font-weight: 700; 
+    color: #1e293b; 
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+  }
+  
+  .upload-zone p { 
+    color: #64748b; 
+    margin: 0; 
+    font-size: 0.95rem; 
+  }
 
-  .url-input-group { display: flex; gap: 0.75rem; align-items: stretch; }
-  .url-input-group input {
-    flex: 1; padding: 0.85rem 1rem;
-    border: 2px solid #e2e8f0; border-radius: 12px;
-    font-size: 0.95rem; transition: border-color 0.2s;
-    background: white; color: #1e293b;
+  .url-input-group { 
+    display: flex; 
+    gap: 1rem; 
+    align-items: stretch; 
   }
-  .url-input-group input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-  .url-input-group input::placeholder { color: #94a3b8; }
+  
+  .url-input-group input {
+    flex: 1; 
+    padding: 1rem 1.25rem;
+    border: 2px solid #e2e8f0; 
+    border-radius: 12px;
+    font-size: 1rem; 
+    transition: all 0.2s;
+    background: white; 
+    color: #1e293b;
+  }
+  
+  .url-input-group input:focus { 
+    outline: none; 
+    border-color: #6366f1; 
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.1); 
+  }
+  
+  .url-input-group input::placeholder { 
+    color: #94a3b8; 
+  }
 
   .file-selected {
-    margin-top: 1rem; padding: 0.9rem 1rem;
-    background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3);
-    border-radius: 10px; color: #065f46; font-weight: 600;
-    display: flex; align-items: center; gap: 0.5rem;
+    margin-top: 1.5rem; 
+    padding: 1rem 1.25rem;
+    background: rgba(16,185,129,0.1); 
+    border: 2px solid rgba(16,185,129,0.3);
+    border-radius: 12px; 
+    color: #065f46; 
+    font-weight: 600;
+    display: flex; 
+    align-items: center; 
+    gap: 0.75rem;
+  }
+
+  .submit-section {
+    margin-top: 2rem;
+    text-align: center;
+  }
+
+  .btn-analyze {
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    color: white;
+    border: none;
+    padding: 1rem 3rem;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(99,102,241,0.2);
+    min-width: 200px;
+  }
+
+  .btn-analyze:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(99,102,241,0.3);
+  }
+
+  .btn-analyze:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .error-message, .success-message {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+  }
+
+  .error-message {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 2px solid #fecaca;
+  }
+
+  .success-message {
+    background: #f0fdf4;
+    color: #166534;
+    border: 2px solid #bbf7d0;
+  }
+
+  .info-cards {
+    margin-top: 3rem;
   }
 
   .info-card {
-    background: white; border: 1px solid #e2e8f0;
-    border-radius: 14px; padding: 1.5rem;
+    background: white; 
+    border: 1px solid #e2e8f0;
+    border-radius: 16px; 
+    padding: 2rem;
+    height: 100%;
+    transition: all 0.3s ease;
   }
+
+  .info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(99,102,241,0.1);
+    border-color: rgba(99,102,241,0.3);
+  }
+  
   .info-card h6 {
-    font-weight: 700; margin-bottom: 1rem;
-    display: flex; align-items: center; gap: 0.5rem;
+    font-weight: 700; 
+    margin-bottom: 1.25rem;
+    display: flex; 
+    align-items: center; 
+    gap: 0.75rem;
     color: #1e293b;
+    font-size: 1.1rem;
   }
-  .info-card ul { margin: 0; padding-left: 1.25rem; color: #475569; font-size: 0.9rem; }
-  .info-card li { margin-bottom: 0.4rem; }
-
-  /* Four boxes */
-  .four-boxes { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
-  .four-boxes .box {
-    width: 90px; height: 90px; background: white;
-    border: 2px solid #e2e8f0; border-radius: 14px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 0.4rem; transition: all 0.3s; opacity: 0.4;
+  
+  .info-card ul { 
+    margin: 0; 
+    padding-left: 1.5rem; 
+    color: #475569; 
+    font-size: 0.95rem; 
   }
-  .four-boxes .box i { font-size: 1.5rem; color: #94a3b8; }
-  .four-boxes .box span { font-size: 0.75rem; font-weight: 600; color: #94a3b8; }
-  .four-boxes .box.active { opacity: 1; border-color: #6366f1; background: rgba(99,102,241,0.06); animation: pulse-box 1s ease-in-out infinite; }
-  .four-boxes .box.active i, .four-boxes .box.active span { color: #6366f1; }
-  .four-boxes .box.completed { opacity: 1; border-color: #10b981; background: rgba(16,185,129,0.06); }
-  .four-boxes .box.completed i, .four-boxes .box.completed span { color: #10b981; }
-  @keyframes pulse-box { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+  
+  .info-card li {
+    margin-bottom: 0.5rem;
+  }
 
+  .upload-panel {
+    display: none;
+  }
 
+  .upload-panel.active {
+    display: block;
+  }
 
-  @media (max-width: 576px) {
-    .method-tabs { flex-direction: column; }
-    .url-input-group { flex-direction: column; }
-    .upload-zone { padding: 2rem 1rem; }
+  .four-boxes-animation {
+    display: none;
+    margin: 2rem auto;
+    padding: 2rem;
+    max-width: 500px;
+  }
+
+  .four-boxes-animation.visible {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .box {
+    width: 80px;
+    height: 80px;
+    background: rgba(226, 232, 240, 0.6);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.5s ease;
+    opacity: 0.7;
+  }
+
+  .box.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(168, 85, 247, 0.8));
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(99,102,241,0.3);
+  }
+
+  .box.completed {
+    background: rgba(34, 197, 94, 0.8);
+    opacity: 1;
+  }
+
+  .box i {
+    color: white;
+    font-size: 1.5rem;
+  }
+
+  .box span {
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
+  }
+
+  @media (max-width: 768px) {
+    .method-tabs { 
+      flex-direction: column; 
+    }
+    
+    .url-input-group { 
+      flex-direction: column; 
+    }
+    
+    .upload-zone { 
+      padding: 3rem 1.5rem; 
+    }
+
+    .upload-header {
+      padding: 2rem 1.5rem;
+    }
+
+    .upload-header h1 {
+      font-size: 1.75rem;
+    }
   }
 </style>
 {% endblock %}
@@ -99,35 +324,39 @@
 <div class="container py-4">
   <div class="upload-header">
     <h1><i class="fas fa-microscope me-2"></i>Analyze Research Paper</h1>
-    <p>Upload a PDF or paste a URL to get AI-powered analysis instantly</p>
+    <p>Upload a PDF or Word file, paste a URL, or upload multiple files to get AI-powered analysis instantly</p>
   </div>
 
-  <div class="row">
-    <div class="col-lg-7 mx-auto">
-      <div class="card shadow-sm" style="border-radius:18px; border:1px solid var(--border-color); background: var(--bg-card);">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm" style="border-radius:20px; border:1px solid #e2e8f0; background: white;">
         <div class="card-body p-4">
-          <form id="analyzeForm" enctype="multipart/form-data">
+          
+          <!-- Method Selection Tabs -->
+          <div class="method-tabs">
+            <button type="button" class="method-tab active" data-tab="pdf">
+              <i class="fas fa-file-pdf"></i> PDF Upload
+            </button>
+            <button type="button" class="method-tab" data-tab="url">
+              <i class="fas fa-globe"></i> URL / Link
+            </button>
+            <button type="button" class="method-tab" data-tab="bulk">
+              <i class="fas fa-layer-group"></i> Bulk Upload
+            </button>
+          </div>
+
+          <form id="analyzeForm" method="post" enctype="multipart/form-data" action="{% url 'analyze_document' %}">
             {% csrf_token %}
             <input type="hidden" name="input_type" id="inputType" value="pdf">
 
-            <!-- Tabs -->
-            <div class="method-tabs">
-              <button type="button" class="method-tab active" id="tab-pdf" onclick="switchTab('pdf')">
-                <i class="fas fa-file-pdf"></i> PDF Upload
-              </button>
-              <button type="button" class="method-tab" id="tab-url" onclick="switchTab('url')">
-                <i class="fas fa-globe"></i> URL / Link
-              </button>
-            </div>
-
-            <!-- PDF Panel -->
-            <div id="panel-pdf">
-              <div class="upload-zone" id="uploadZone">
+            <!-- PDF Upload Panel -->
+            <div id="panel-pdf" class="upload-panel active">
+              <div class="upload-zone" onclick="document.getElementById('pdfFile').click()">
                 <i class="fas fa-cloud-upload-alt"></i>
-                <h5>Drag & drop your PDF here</h5>
-                <p>or click to browse — max 45 MB</p>
+                <h5>Drag & drop your PDF or Word file here</h5>
+                <p>or click to browse — PDF, DOCX, DOC — max 45 MB</p>
               </div>
-              <input type="file" id="pdfFile" name="pdf_file" accept=".pdf" style="display:none">
+              <input type="file" id="pdfFile" name="pdf_file" accept=".pdf,.docx,.doc" style="display:none">
               <div class="file-selected" id="fileSelected" style="display:none">
                 <i class="fas fa-check-circle"></i>
                 <span id="fileName"></span>
@@ -138,130 +367,399 @@
             </div>
 
             <!-- URL Panel -->
-            <div id="panel-url" style="display:none">
-              <label class="form-label fw-600 mb-2" style="color:#1e293b;">
-                <i class="fas fa-link me-1 text-primary"></i> Paper URL or DOI
+            <div id="panel-url" class="upload-panel">
+              <label class="form-label fw-600 mb-3" style="color:#1e293b; font-size: 1rem;">
+                <i class="fas fa-link me-2 text-primary"></i> Paper URL or DOI
               </label>
               <div class="url-input-group">
                 <input type="url" id="urlInput" name="url_input"
                   placeholder="https://arxiv.org/abs/... or https://doi.org/...">
               </div>
-              <div class="mt-2" style="font-size:.82rem;color:#64748b;">
-                <i class="fas fa-info-circle me-1"></i>
+              <div class="mt-3" style="font-size:.9rem;color:#64748b;">
+                <i class="fas fa-info-circle me-2"></i>
                 Supports: arXiv, ResearchGate, PubMed, DOI links, and most academic paper pages.
               </div>
             </div>
 
-            <!-- Error / Success -->
-            <div id="errorMessage" class="mt-3 p-3 rounded-3" style="display:none;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;"></div>
-            <div id="successMessage" class="mt-3 p-3 rounded-3" style="display:none;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;"></div>
 
-            <!-- Submit -->
-            <div class="text-center mt-4">
-              <button type="submit" class="btn btn-primary-custom px-5 py-2" id="submitBtn" style="min-width:200px;border-radius:12px;">
-                <i class="fas fa-wand-magic-sparkles me-2"></i>Analyze Paper
-              </button>
+
+            <!-- Bulk Upload Panel -->
+            <div id="panel-bulk" class="upload-panel">
+              <label class="form-label fw-600 mb-3" style="color:#1e293b; font-size: 1rem;">
+                <i class="fas fa-layer-group me-2 text-primary"></i> Multiple PDF / Word Files
+              </label>
+              <div class="upload-zone" onclick="document.getElementById('bulkFiles').click()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h5>Drag & drop multiple files here</h5>
+                <p>or click to browse — PDF, DOCX, DOC — max 5 files, 45 MB each</p>
+              </div>
+              <input type="file" id="bulkFiles" name="bulk_files" accept=".pdf,.docx,.doc" multiple style="display:none">
+              <div class="file-selected" id="bulkFilesSelected" style="display:none">
+                <i class="fas fa-check-circle"></i>
+                <span id="bulkFileNames"></span>
+                <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="removeBulkFiles()">
+                  <i class="fas fa-times"></i> Remove All
+                </button>
+              </div>
             </div>
 
-            <!-- Progress animation -->
-            <div id="fourBoxesAnimation" style="display:none;margin-top:2rem;text-align:center;">
-              <p class="text-muted small mb-3">AI is analyzing your paper...</p>
-              <div class="four-boxes">
-                <div class="box box-1"><i class="fas fa-file-import"></i><span>Extracting</span></div>
-                <div class="box box-2"><i class="fas fa-brain"></i><span>Analyzing</span></div>
-                <div class="box box-3"><i class="fas fa-search"></i><span>Checking</span></div>
-                <div class="box box-4"><i class="fas fa-check-circle"></i><span>Complete</span></div>
+            <!-- Error/Success Messages -->
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+
+            <!-- Submit Button -->
+            <div class="submit-section">
+              <button type="submit" class="btn-analyze" id="submitBtn">
+                <i class="fas fa-wand-magic-sparkles me-2"></i>Analyze Paper
+              </button>
+              <div id="fourBoxesAnimation" class="four-boxes-animation">
+                <div class="box" data-step="1">
+                  <i class="fas fa-upload"></i>
+                  <span>Upload</span>
+                </div>
+                <div class="box" data-step="2">
+                  <i class="fas fa-file-pdf"></i>
+                  <span>Extract</span>
+                </div>
+                <div class="box" data-step="3">
+                  <i class="fas fa-brain"></i>
+                  <span>Analyze</span>
+                </div>
+                <div class="box" data-step="4">
+                  <i class="fas fa-check"></i>
+                  <span>Complete</span>
+                </div>
+              </div>
+              <div class="mt-3" style="font-size:0.9rem;color:#64748b;">
+                <i class="fas fa-shield-alt me-2"></i>
+                Your files are processed securely and never stored permanently
               </div>
             </div>
           </form>
         </div>
       </div>
 
-      <!-- Info cards -->
-      <div class="row g-3 mt-3">
-        <div class="col-md-6">
-          <div class="info-card">
-            <h6><i class="fas fa-check-circle text-success"></i> What We Extract</h6>
-            <ul>
-              <li>Summary & Abstract</li>
-              <li>Keywords & Technologies</li>
-              <li>Methodology & Approach</li>
-              <li>Authors & Publication Year</li>
-              <li>References & Links</li>
-            </ul>
+      <!-- Info Cards -->
+      <div class="info-cards">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="info-card">
+              <h6><i class="fas fa-check-circle text-success"></i> What We Extract</h6>
+              <ul>
+                <li>Summary & Abstract Analysis</li>
+                <li>Keywords & Technologies</li>
+                <li>Methodology & Approach</li>
+                <li>Authors & Publication Details</li>
+                <li>References & Citations</li>
+                <li>Research Gaps & Future Work</li>
+              </ul>
+            </div>
           </div>
-        </div>
-        <div class="col-md-6">
-          <div class="info-card">
-            <h6><i class="fas fa-bolt text-primary"></i> Features</h6>
-            <ul>
-              <li>AI-Powered Analysis (Groq)</li>
-              <li>Plagiarism Detection</li>
-              <li>Export PDF / TXT / JSON</li>
-              <li>Citation Generation</li>
-              <li>Q&A About the Paper</li>
-            </ul>
+          <div class="col-md-6">
+            <div class="info-card">
+              <h6><i class="fas fa-bolt text-primary"></i> AI Features</h6>
+              <ul>
+                <li>Advanced NLP Analysis (Groq)</li>
+                <li>Semantic Plagiarism Detection</li>
+                <li>Multi-format Export (PDF/TXT/JSON)</li>
+                <li>Interactive Q&A System</li>
+                <li>Paper Comparison Tools</li>
+                <li>Citation Generation</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
-<script src="{% static 'js/analysis_handler.js' %}"></script>
 <script>
-function switchTab(tab) {
-  document.getElementById('panel-pdf').style.display = tab === 'pdf' ? 'block' : 'none';
-  document.getElementById('panel-url').style.display = tab === 'url' ? 'block' : 'none';
-  document.getElementById('tab-pdf').classList.toggle('active', tab === 'pdf');
-  document.getElementById('tab-url').classList.toggle('active', tab === 'url');
-  document.getElementById('inputType').value = tab;
+// Tab switching functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const tabs = document.querySelectorAll('.method-tab');
+  const panels = document.querySelectorAll('.upload-panel');
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      const targetTab = this.getAttribute('data-tab');
+      
+      // Remove active class from all tabs and panels
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      
+      // Add active class to clicked tab and corresponding panel
+      this.classList.add('active');
+      document.getElementById('panel-' + targetTab).classList.add('active');
+      
+      // Update hidden input
+      document.getElementById('inputType').value = targetTab;
+      
+      // Clear messages
+      hideMessages();
+    });
+  });
+  
+  // PDF file input handler
+  document.getElementById('pdfFile').addEventListener('change', function() {
+    handleFileSelection(this, 'fileSelected', 'fileName', 'panel-pdf');
+  });
+
+
+  
+  // Bulk files input handler
+  document.getElementById('bulkFiles').addEventListener('change', function() {
+    handleBulkFileSelection(this);
+  });
+  
+  // Form submission
+  document.getElementById('analyzeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    handleFormSubmission();
+  });
+});
+
+function isAllowedFile(filename) {
+  const lower = filename.toLowerCase();
+  return lower.endsWith('.pdf') || lower.endsWith('.docx') || lower.endsWith('.doc');
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  const uploadZone = document.getElementById('uploadZone');
-  const pdfFile = document.getElementById('pdfFile');
-  const fileSelected = document.getElementById('fileSelected');
-  const fileName = document.getElementById('fileName');
+function fileIcon(filename) {
+  const lower = filename.toLowerCase();
+  if (lower.endsWith('.pdf')) return 'fa-file-pdf text-danger';
+  if (lower.endsWith('.docx') || lower.endsWith('.doc')) return 'fa-file-word text-primary';
+  return 'fa-file';
+}
 
-  uploadZone.addEventListener('click', () => pdfFile.click());
+function handleFileSelection(input, selectedId, nameId, panelId) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    
+    // Validate file
+    if (!isAllowedFile(file.name)) {
+      showError('Only PDF and Word (.docx, .doc) files are supported');
+      input.value = '';
+      return;
+    }
+    
+    if (file.size > 45 * 1024 * 1024) {
+      showError('File size exceeds 45MB limit');
+      input.value = '';
+      return;
+    }
+    
+    // Show selected file
+    document.getElementById(selectedId).style.display = 'flex';
+    document.getElementById(nameId).textContent = file.name + ' (' + (file.size/1024/1024).toFixed(2) + ' MB)';
+    document.querySelector('#' + panelId + ' .upload-zone').style.display = 'none';
+    hideMessages();
+  }
+}
 
-  pdfFile.addEventListener('change', function() {
-    if (this.files[0]) showFile(this.files[0]);
-  });
+function handleBulkFileSelection(input) {
+  hideMessages();
+  if (input.files && input.files.length > 0) {
+    const files = Array.from(input.files);
+    
+    // Validate files
+    for (let file of files) {
+      if (!isAllowedFile(file.name)) {
+        showError('All files must be PDF or Word (.docx, .doc) format');
+        input.value = '';
+        return;
+      }
+      if (file.size > 45 * 1024 * 1024) {
+        showError('File "' + file.name + '" exceeds 45MB limit');
+        input.value = '';
+        return;
+      }
+    }
+    
+    if (files.length > 5) {
+      showError('Maximum 5 files allowed');
+      input.value = '';
+      return;
+    }
+    
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    document.getElementById('bulkFilesSelected').style.display = 'flex';
+    
+    // Create detailed file list
+    let fileListHtml = `<div class="mt-2 text-start p-2 rounded" style="background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.1); max-height:100px; overflow-y:auto;">`;
+    files.forEach(f => {
+        fileListHtml += `<div class="small mb-1"><i class="fas ${fileIcon(f.name)} me-2"></i>${f.name}</div>`;
+    });
+    fileListHtml += `</div>`;
+    
+    document.getElementById('bulkFileNames').innerHTML = `<strong>${files.length} documents</strong> ready for analysis (${(totalSize/1024/1024).toFixed(2)} MB total) ${fileListHtml}`;
+    document.querySelector('#panel-bulk .upload-zone').style.display = 'none';
+    hideMessages();
+  }
+}
 
-  uploadZone.addEventListener('dragover', e => {
-    e.preventDefault();
-    uploadZone.style.borderColor = '#6366f1';
-    uploadZone.style.background = 'rgba(99,102,241,0.05)';
-  });
-  uploadZone.addEventListener('dragleave', () => {
-    uploadZone.style.borderColor = '#cbd5e1';
-    uploadZone.style.background = '#f8fafc';
-  });
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.style.borderColor = '#cbd5e1';
-    uploadZone.style.background = '#f8fafc';
-    if (e.dataTransfer.files[0]) {
-      pdfFile.files = e.dataTransfer.files;
-      showFile(e.dataTransfer.files[0]);
+function removeFile() {
+  document.getElementById('pdfFile').value = '';
+  document.getElementById('fileSelected').style.display = 'none';
+  document.querySelector('#panel-pdf .upload-zone').style.display = 'block';
+}
+
+
+
+function removeBulkFiles() {
+  document.getElementById('bulkFiles').value = '';
+  document.getElementById('bulkFilesSelected').style.display = 'none';
+  document.querySelector('#panel-bulk .upload-zone').style.display = 'block';
+}
+
+function showError(message) {
+  const errorDiv = document.getElementById('errorMessage');
+  errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + message;
+  errorDiv.style.display = 'flex';
+  document.getElementById('successMessage').style.display = 'none';
+}
+
+function showSuccess(message) {
+  const successDiv = document.getElementById('successMessage');
+  successDiv.innerHTML = '<i class="fas fa-check-circle"></i> ' + message;
+  successDiv.style.display = 'flex';
+  document.getElementById('errorMessage').style.display = 'none';
+}
+
+function hideMessages() {
+  document.getElementById('errorMessage').style.display = 'none';
+  document.getElementById('successMessage').style.display = 'none';
+}
+
+function getCsrfToken() {
+  return (
+    document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+    document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] ||
+    ''
+  );
+}
+
+function updateFourBoxes(step) {
+  const container = document.getElementById('fourBoxesAnimation');
+  if (!container) return;
+  
+  const boxes = container.querySelectorAll('.box');
+  boxes.forEach((box, index) => {
+    if (index + 1 < step) {
+      box.classList.remove('active');
+      box.classList.add('completed');
+      const icon = box.querySelector('i');
+      if (icon) icon.className = 'fas fa-check';
+    } else if (index + 1 === step) {
+      box.classList.add('active');
+      box.classList.remove('completed');
+    } else {
+      box.classList.remove('active', 'completed');
     }
   });
+}
 
-  function showFile(file) {
-    fileSelected.style.display = 'flex';
-    fileName.textContent = file.name + ' (' + (file.size/1024/1024).toFixed(2) + ' MB)';
-    uploadZone.style.display = 'none';
+function showFourBoxesAnimation() {
+  const container = document.getElementById('fourBoxesAnimation');
+  if (container) {
+    container.classList.add('visible');
+    updateFourBoxes(1);
   }
+}
 
-  window.removeFile = function() {
-    pdfFile.value = '';
-    fileSelected.style.display = 'none';
-    uploadZone.style.display = 'block';
-  };
-});
+function hideFourBoxesAnimation() {
+  const container = document.getElementById('fourBoxesAnimation');
+  if (container) {
+    container.classList.remove('visible');
+  }
+}
+
+function handleFormSubmission() {
+  const inputType = document.getElementById('inputType').value;
+  const submitBtn = document.getElementById('submitBtn');
+  
+  // Validate based on input type
+  if (inputType === 'pdf') {
+    const pdfFile = document.getElementById('pdfFile');
+    if (!pdfFile.files || pdfFile.files.length === 0) {
+      showError('Please select a PDF file');
+      return;
+    }
+
+  } else if (inputType === 'url') {
+    const urlInput = document.getElementById('urlInput');
+    if (!urlInput.value.trim()) {
+      showError('Please enter a URL');
+      return;
+    }
+    if (!urlInput.value.startsWith('http')) {
+      showError('URL must start with http:// or https://');
+      return;
+    }
+  } else if (inputType === 'bulk') {
+    const bulkFiles = document.getElementById('bulkFiles');
+    if (!bulkFiles.files || bulkFiles.files.length === 0) {
+      showError('Please select PDF or Word files for bulk upload');
+      return;
+    }
+  }
+  
+  // Update button state and show animation
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
+  showFourBoxesAnimation();
+  
+  // Simulate animation steps
+  let currentStep = 1;
+  const simulationInterval = setInterval(() => {
+    if (currentStep < 3) {
+      currentStep++;
+      updateFourBoxes(currentStep);
+    } else {
+      clearInterval(simulationInterval);
+    }
+  }, 2500);
+  
+  // Submit form using AJAX to handle JSON response
+  const formData = new FormData(document.getElementById('analyzeForm'));
+  
+  fetch('{% url "analyze_document" %}', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRFToken': getCsrfToken()
+    },
+    signal: AbortSignal.timeout(120000)  // 2 minute timeout
+  })
+  .then(response => response.json())
+  .then(data => {
+    clearInterval(simulationInterval);
+    if (data.success && data.redirect_url) {
+      updateFourBoxes(4);
+      showSuccess(data.message || 'Analysis completed successfully!');
+      setTimeout(() => {
+        window.location.href = data.redirect_url;
+      }, 800);
+    } else if (data.error) {
+      hideFourBoxesAnimation();
+      const errorMsg = data.error + (data.debug_info ? '<br><small class="text-muted">Debug: ' + JSON.stringify(data.debug_info) + '</small>' : '');
+      showError(errorMsg);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-wand-magic-sparkles me-2"></i>Analyze Paper';
+    }
+  })
+.catch(error => {
+    clearInterval(simulationInterval);
+    console.error('Error:', error);
+    hideFourBoxesAnimation();
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      showError('Request timed out. The server is taking too long — please try again.');
+    } else {
+      showError('An error occurred. Please try again.');
+    }
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fas fa-wand-magic-sparkles me-2"></i>Analyze Paper';
+  });
+}
 </script>
 {% endblock %}

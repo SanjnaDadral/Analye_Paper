@@ -1,434 +1,262 @@
-<!doctype html>
+{% extends 'analyzer/base.html' %}
 {% load static %}
-<html lang="en">
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Register - PaperAIzer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --secondary: #ec4899;
-    }
+{% block title %}Register - PaperAIzer{% endblock %}
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg,
-          #f0f9ff 0%,
-          #e0f2fe 50%,
-          #ede9fe 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1rem;
-    }
-
-    .register-container {
-      width: 100%;
-      max-width: 420px;
-    }
-
-    .register-card {
-      background: white;
-      border-radius: 20px;
-      padding: 2.5rem;
-      box-shadow: 0 10px 40px rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.1);
-    }
-
-    .register-header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 1.75rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 0.5rem;
-    }
-
-    .brand i {
-      font-size: 2rem;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .register-header h2 {
-      font-size: 1.5rem;
-      color: #1e293b;
-      margin-bottom: 0.5rem;
-    }
-
-    .register-header p {
-      color: #64748b;
-      font-size: 0.9rem;
-    }
-
-    .form-group {
-      margin-bottom: 1.25rem;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: #334155;
-      font-size: 0.9rem;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 0.875rem 1rem;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      transition: all 0.2s;
-      font-family: "Poppins", sans-serif;
-    }
-
-    .form-group input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-    }
-
-    .btn-register {
-      width: 100%;
-      padding: 0.875rem;
-      background: linear-gradient(135deg,
-          var(--primary),
-          var(--primary-dark));
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 1rem;
-      font-family: "Poppins", sans-serif;
-    }
-
-    .btn-register:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
-    }
-
-    .btn-register:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-
-    .divider {
-      display: flex;
-      align-items: center;
-      margin: 1.5rem 0;
-      color: #94a3b8;
-      font-size: 0.85rem;
-    }
-
-    .divider::before,
-    .divider::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: #e2e8f0;
-    }
-
-    .divider span {
-      padding: 0 1rem;
-    }
-
-    .login-link {
-      text-align: center;
-      color: #64748b;
-      font-size: 0.9rem;
-    }
-
-    .login-link a {
-      color: var(--primary);
-      font-weight: 600;
-      text-decoration: none;
-    }
-
-    .login-link a:hover {
-      text-decoration: underline;
-    }
-
-    .alert {
-      padding: 0.875rem 1rem;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .alert-error {
-      background: #fef2f2;
-      color: #991b1b;
-      border: 1px solid #fecaca;
-    }
-
-    .alert-success {
-      background: #f0fdf4;
-      color: #166534;
-      border: 1px solid #bbf7d0;
-    }
-
-    .input-icon {
-      position: relative;
-    }
-
-    .input-icon i {
-      position: absolute;
-      left: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #94a3b8;
-    }
-
-    .input-icon input {
-      padding-left: 2.75rem;
-    }
-
-    .password-toggle {
-      position: absolute;
-      right: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: pointer;
-      color: #94a3b8;
-      background: none;
-      border: none;
-      font-size: 1rem;
-      padding: 0.5rem;
-      transition: color 0.2s;
-    }
-
-    .password-toggle:hover {
-      color: var(--primary);
-    }
-
-    .password-group {
-      position: relative;
-    }
-
-    .password-match-indicator {
-      position: absolute;
-      right: 3.5rem;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 1rem;
-      display: none;
-    }
-
-    .password-match-indicator.show {
-      display: block;
-    }
-
-    .password-match-indicator.match {
-      color: #16a34a;
-    }
-
-    .password-match-indicator.mismatch {
-      color: #dc2626;
-    }
-
-    .password-help {
-      margin-top: 0.5rem;
-      font-size: 0.8rem;
-      color: #94a3b8;
-    }
-
-    .password-help.match {
-      color: #16a34a;
-    }
-
-    .password-help.mismatch {
-      color: #dc2626;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="register-container">
-    <div class="register-card">
-      <div class="register-header">
-        <div class="brand"><i class="fas fa-brain"></i> PaperAIzer</div>
-        <h2>Create account</h2>
-        <p>Start analyzing research papers instantly</p>
-      </div>
-
-      {% if form.errors %}
-      <div class="alert alert-error">
-        <i class="fas fa-exclamation-circle"></i>
-        {% if form.non_field_errors %}
-          {{ form.non_field_errors.0 }}
-        {% else %}
-          Please fix the errors below and try again.
-        {% endif %}
-      </div>
-      {% endif %}
-
-      <form method="post">
-        {% csrf_token %}
-        <div class="form-group">
-          <label for="id_first_name"><i class="fas fa-user me-2"></i>Full Name</label>
-          <div class="input-icon">
-            <i class="fas fa-user"></i>
-            <input type="text" name="first_name" id="id_first_name" placeholder="Enter your full name" required
-              autofocus />
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card border-0" style="border-radius: 20px; background: #ffffff; box-shadow: 0 10px 40px rgba(99,102,241,0.15);">
+        <div class="card-body p-4">
+          <div class="text-center mb-4">
+            <div class="brand-icon-wrapper mb-3" style="width: 60px; height: 60px; margin: 0 auto; background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-user-plus" style="color: white; font-size: 1.5rem;"></i>
+            </div>
+            <h1 style="font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">
+              Create account
+            </h1>
+            <p style="color: #64748b; font-size: 0.95rem;">Start analyzing research papers instantly</p>
           </div>
-          {% if form.first_name.errors %}<small style="
-                color: #ef4444;
-                font-size: 0.8rem;
-                margin-top: 0.25rem;
-                display: block;
-              ">{{ form.first_name.errors.0 }}</small>{% endif %}
-        </div>
-        <div class="form-group">
-          <label for="id_email"><i class="fas fa-envelope me-2"></i>Email</label>
-          <div class="input-icon">
-            <i class="fas fa-envelope"></i>
-            <input type="email" name="email" id="id_email" placeholder="Enter your email" required />
+
+          {% if form.errors %}
+          <div class="alert mb-3" style="border-radius: 10px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #dc2626;">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            {% if form.non_field_errors %}
+              {{ form.non_field_errors.0 }}
+            {% else %}
+              Please fix the errors below and try again.
+            {% endif %}
           </div>
-          {% if form.email.errors %}<small style="
-                color: #ef4444;
-                font-size: 0.8rem;
-                margin-top: 0.25rem;
-                display: block;
-              ">{{ form.email.errors.0 }}</small>{% endif %}
-        </div>
-        <div class="form-group">
-          <label for="id_password1"><i class="fas fa-lock me-2"></i>Password</label>
-          <div class="input-icon password-group">
-            <i class="fas fa-lock"></i>
-            <input type="password" name="password1" id="id_password1" placeholder="At least 8 characters" required />
-            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('id_password1')">
-              <i class="fas fa-eye"></i>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label for="{{ form.first_name.id_for_label }}" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">Full Name</label>
+              <div class="input-group">
+                <span class="input-group-text" style="background: #f8fafc; border: 2px solid #e2e8f0; border-right: none; border-radius: 10px 0 0 10px; color: #94a3b8;">
+                  <i class="fas fa-user"></i>
+                </span>
+                <input type="text" class="form-control" id="{{ form.first_name.id_for_label }}" name="{{ form.first_name.html_name }}" placeholder="Enter your full name" required style="border: 2px solid #e2e8f0; border-left: none; border-radius: 0 10px 10px 0; padding: 0.75rem 1rem; background: #ffffff; color: #0f172a;" value="{{ form.first_name.value|default:'' }}">
+              </div>
+              {% if form.first_name.errors %}
+              <small class="text-danger mt-1 d-block">{{ form.first_name.errors.0 }}</small>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.email.id_for_label }}" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">Email Address</label>
+              <div class="input-group">
+                <span class="input-group-text" style="background: #f8fafc; border: 2px solid #e2e8f0; border-right: none; border-radius: 10px 0 0 10px; color: #94a3b8;">
+                  <i class="fas fa-envelope"></i>
+                </span>
+                <input type="email" class="form-control" id="{{ form.email.id_for_label }}" name="{{ form.email.html_name }}" placeholder="Enter your email" required style="border: 2px solid #e2e8f0; border-left: none; border-radius: 0 10px 10px 0; padding: 0.75rem 1rem; background: #ffffff; color: #0f172a;" value="{{ form.email.value|default:'' }}">
+              </div>
+              {% if form.email.errors %}
+              <small class="text-danger mt-1 d-block">{{ form.email.errors.0 }}</small>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.password1.id_for_label }}" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">Password</label>
+              <div class="input-group position-relative">
+                <span class="input-group-text" style="background: #f8fafc; border: 2px solid #e2e8f0; border-right: none; border-radius: 10px 0 0 10px; color: #94a3b8;">
+                  <i class="fas fa-lock"></i>
+                </span>
+                <input type="password" class="form-control" id="{{ form.password1.id_for_label }}" name="{{ form.password1.html_name }}" placeholder="At least 8 characters" required style="border: 2px solid #e2e8f0; border-left: none; border-radius: 0 10px 10px 0; padding: 0.75rem 1rem; background: #ffffff; color: #0f172a;">
+                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('{{ form.password1.id_for_label }}')">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              {% if form.password1.errors %}
+              <small class="text-danger mt-1 d-block">{{ form.password1.errors.0 }}</small>
+              {% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label for="{{ form.password2.id_for_label }}" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">Confirm Password</label>
+              <div class="input-group position-relative">
+                <span class="input-group-text" style="background: #f8fafc; border: 2px solid #e2e8f0; border-right: none; border-radius: 10px 0 0 10px; color: #94a3b8;">
+                  <i class="fas fa-lock"></i>
+                </span>
+                <input type="password" class="form-control" id="{{ form.password2.id_for_label }}" name="{{ form.password2.html_name }}" placeholder="Confirm your password" required style="border: 2px solid #e2e8f0; border-left: none; border-radius: 0 10px 10px 0; padding: 0.75rem 1rem; background: #ffffff; color: #0f172a;">
+                <span class="password-match-indicator"></span>
+                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('{{ form.password2.id_for_label }}')">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              {% if form.password2.errors %}
+              <small class="text-danger mt-1 d-block">{{ form.password2.errors.0 }}</small>
+              {% endif %}
+              <div class="password-help" id="password-help"></div>
+            </div>
+
+            <button type="submit" class="btn-primary-custom w-100 py-3 btn-register" style="background: linear-gradient(135deg, #6366f1, #ec4899); border: none; border-radius: 10px; font-weight: 600; color: white; cursor: pointer;">
+              <i class="fas fa-user-plus me-2"></i>Create Account
             </button>
-          </div>
-          {% if form.password1.errors %}<small style="
-                color: #ef4444;
-                font-size: 0.8rem;
-                margin-top: 0.25rem;
-                display: block;
-              ">{{ form.password1.errors.0 }}</small>{% endif %}
-        </div>
-        <div class="form-group">
-          <label for="id_password2"><i class="fas fa-lock me-2"></i>Confirm Password</label>
-          <div class="input-icon password-group">
-            <i class="fas fa-lock"></i>
-            <input type="password" name="password2" id="id_password2" placeholder="Confirm your password" required />
-            <span class="password-match-indicator"></span>
-            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('id_password2')">
-              <i class="fas fa-eye"></i>
-            </button>
-          </div>
-          {% if form.password2.errors %}<small style="
-                color: #ef4444;
-                font-size: 0.8rem;
-                margin-top: 0.25rem;
-                display: block;
-              ">{{ form.password2.errors.0 }}</small>{% endif %}
-          <div class="password-help" id="password-help"></div>
-        </div>
-        <button type="submit" class="btn-register">
-          <i class="fas fa-user-plus me-2"></i>Create Account
-        </button>
-      </form>
+          </form>
 
-      <div class="divider"><span>or</span></div>
-      <p class="login-link">
-        Already have an account? <a href="{% url 'login' %}">Sign in</a>
-      </p>
+          <div class="text-center mt-4 pt-3" style="border-top: 1px solid #e2e8f0;">
+            <p style="margin-bottom: 0; color: #64748b; font-size: 0.9rem;">
+              Already have an account?
+              <a href="{% url 'login' %}" style="color: #6366f1; text-decoration: none; font-weight: 600;">Sign in</a>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+</div>
 
-  <script>
-    function togglePasswordVisibility(inputId) {
-      const input = document.getElementById(inputId);
-      const button = event.target.closest(".password-toggle");
-      const icon = button.querySelector("i");
+<style>
+  .form-control::placeholder {
+    color: #94a3b8 !important;
+  }
 
-      if (input.type === "password") {
-        input.type = "text";
-        icon.classList.remove("fa-eye");
-        icon.classList.add("fa-eye-slash");
-      } else {
-        input.type = "password";
-        icon.classList.remove("fa-eye-slash");
-        icon.classList.add("fa-eye");
-      }
+  .form-control:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+    outline: none;
+  }
+
+  .btn-primary-custom {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+  }
+
+  .btn-primary-custom:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  .password-toggle:hover {
+    color: #6366f1;
+  }
+
+  .password-match-indicator {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+    z-index: 10;
+  }
+
+  .password-match-indicator.show {
+    display: block;
+  }
+
+  .password-match-indicator.match {
+    color: #16a34a;
+  }
+
+  .password-match-indicator.mismatch {
+    color: #dc2626;
+  }
+
+  .password-help {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: #94a3b8;
+  }
+
+  .password-help.match {
+    color: #16a34a;
+  }
+
+  .password-help.mismatch {
+    color: #dc2626;
+  }
+</style>
+
+<script>
+  function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const button = event.currentTarget;
+    const icon = button.querySelector("i");
+
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.remove("fa-eye");
+      icon.classList.add("fa-eye-slash");
+    } else {
+      input.type = "password";
+      icon.classList.remove("fa-eye-slash");
+      icon.classList.add("fa-eye");
+    }
+  }
+
+  function checkPasswordMatch() {
+    const password1Input = document.getElementById("{{ form.password1.id_for_label }}");
+    const password2Input = document.getElementById("{{ form.password2.id_for_label }}");
+    
+    if(!password1Input || !password2Input) return;
+
+    const password1Val = password1Input.value;
+    const password2Val = password2Input.value;
+    
+    const indicator = document.querySelector(".password-match-indicator");
+    const helpText = document.getElementById("password-help");
+    const button = document.querySelector(".btn-register");
+
+    if (password2Val.length === 0) {
+      indicator.classList.remove("show");
+      helpText.textContent = "";
+      helpText.classList.remove("match", "mismatch");
+      button.disabled = false;
+      return;
     }
 
-    function checkPasswordMatch() {
-      const password1 = document.getElementById("id_password1").value;
-      const password2 = document.getElementById("id_password2").value;
-      const indicator = document.querySelector(".password-match-indicator");
-      const helpText = document.getElementById("password-help");
-      const button = document.querySelector(".btn-register");
+    indicator.classList.add("show");
 
-      if (password2.length === 0) {
-        indicator.classList.remove("show");
-        helpText.textContent = "";
-        helpText.classList.remove("match", "mismatch");
-        button.disabled = false;
-        return;
-      }
-
-      indicator.classList.add("show");
-
-      if (password1 === password2) {
-        indicator.innerHTML = '<i class="fas fa-check-circle"></i>';
-        indicator.classList.remove("mismatch");
-        indicator.classList.add("match");
-        helpText.textContent = "✓ Passwords match!";
-        helpText.classList.remove("mismatch");
-        helpText.classList.add("match");
-        button.disabled = false;
-      } else {
-        indicator.innerHTML = '<i class="fas fa-times-circle"></i>';
-        indicator.classList.remove("match");
-        indicator.classList.add("mismatch");
-        helpText.textContent = "✗ Passwords do not match";
-        helpText.classList.remove("match");
-        helpText.classList.add("mismatch");
-        button.disabled = true;
-      }
+    if (password1Val === password2Val) {
+      indicator.innerHTML = '<i class="fas fa-check-circle"></i>';
+      indicator.classList.remove("mismatch");
+      indicator.classList.add("match");
+      helpText.textContent = "✓ Passwords match!";
+      helpText.classList.remove("mismatch");
+      helpText.classList.add("match");
+      button.disabled = false;
+    } else {
+      indicator.innerHTML = '<i class="fas fa-times-circle"></i>';
+      indicator.classList.remove("match");
+      indicator.classList.add("mismatch");
+      helpText.textContent = "✗ Passwords do not match";
+      helpText.classList.remove("match");
+      helpText.classList.add("mismatch");
+      button.disabled = true;
     }
+  }
 
-    // Add event listeners for password matching
-    document
-      .getElementById("id_password1")
-      .addEventListener("input", checkPasswordMatch);
-    document
-      .getElementById("id_password2")
-      .addEventListener("input", checkPasswordMatch);
-  </script>
-</body>
-
-</html>
+  document.addEventListener('DOMContentLoaded', function() {
+    const p1 = document.getElementById("{{ form.password1.id_for_label }}");
+    const p2 = document.getElementById("{{ form.password2.id_for_label }}");
+    if(p1 && p2) {
+      p1.addEventListener("input", checkPasswordMatch);
+      p2.addEventListener("input", checkPasswordMatch);
+    }
+  });
+</script>
+{% endblock %}

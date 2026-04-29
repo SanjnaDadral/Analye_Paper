@@ -422,6 +422,11 @@ class URLScraper:
             if 'researchgate.net' in url.lower():
                 return self._handle_researchgate(url)
 
+            # Check if URL is a direct PDF link (by path or content-type)
+            url_lower = url.lower().split('?')[0]  # strip query params for extension check
+            if url_lower.endswith('.pdf'):
+                return self._handle_pdf_url(url)
+
             response = requests.get(
                 url,
                 headers=self.headers,
@@ -430,12 +435,15 @@ class URLScraper:
             )
             response.raise_for_status()
 
-            content_type = response.headers.get('Content-Type', '')
+            content_type = response.headers.get('Content-Type', '').lower()
+
+            # If server says it's a PDF, handle as PDF
+            if 'application/pdf' in content_type:
+                return self._extract_pdf_from_bytes(url, response.content)
 
             supported_types = [
                 'text/html',
                 'application/xhtml',
-                'application/pdf',
                 'application/json',
                 'text/plain'
             ]
@@ -483,6 +491,80 @@ class URLScraper:
         except Exception as e:
             logger.error(f"Error scraping {url}: {e}")
             return {'success': False, 'error': str(e), 'url': url}
+
+    def _handle_pdf_url(self, url: str) -> Dict[str, any]:
+        """Download a PDF from a URL and extract its text."""
+        try:
+            response = requests.get(
+                url,
+                headers=self.headers,
+                timeout=60,
+                allow_redirects=True
+            )
+            response.raise_for_status()
+            return self._extract_pdf_from_bytes(url, response.content)
+        except requests.exceptions.HTTPError as e:
+            code = e.response.status_code
+            if code == 403:
+                return {
+                    'success': False,
+                    'error': f'Access denied (HTTP 403). This site blocks automated PDF downloads. Please download the PDF manually and upload it instead.',
+                    'url': url
+                }
+            return {'success': False, 'error': f'HTTP Error {code}', 'url': url}
+        except requests.exceptions.Timeout:
+            return {'success': False, 'error': 'PDF download timed out. The file may be too large.', 'url': url}
+        except Exception as e:
+            return {'success': False, 'error': f'PDF download failed: {str(e)[:200]}', 'url': url}
+
+    def _extract_pdf_from_bytes(self, url: str, pdf_bytes: bytes) -> Dict[str, any]:
+        """Extract text from raw PDF bytes using the project's PDF processor."""
+        import io
+        try:
+            from analyzer.pdf_processor import get_pdf_processor
+            processor = get_pdf_processor()
+
+            # Wrap bytes in a file-like object the processor can handle
+            pdf_file = io.BytesIO(pdf_bytes)
+            pdf_file.name = url.split('/')[-1].split('?')[0] or 'document.pdf'
+
+            result = processor.extract_text(pdf_file)
+
+            if not result.get('success'):
+                return {
+                    'success': False,
+                    'error': result.get('error', 'Failed to extract text from PDF'),
+                    'url': url
+                }
+
+            text = result.get('text', '')
+            if not text or len(text.strip()) < 30:
+                return {
+                    'success': False,
+                    'error': 'Could not extract readable text from this PDF. It may be scanned or image-based.',
+                    'url': url
+                }
+
+            # Use first non-empty line as title fallback
+            title = ''
+            for line in text.splitlines():
+                line = line.strip()
+                if 5 < len(line) < 200:
+                    title = line
+                    break
+
+            return {
+                'success': True,
+                'url': url,
+                'title': title or pdf_file.name,
+                'content': text,
+                'metadata': {},
+                'links': result.get('extracted_links', []),
+            }
+
+        except Exception as e:
+            logger.error(f"PDF extraction from bytes failed for {url}: {e}", exc_info=True)
+            return {'success': False, 'error': f'PDF processing error: {str(e)[:200]}', 'url': url}
 
     # ---------------- HELPERS ----------------
     def _is_valid_url(self, url: str) -> bool:
@@ -566,28 +648,63 @@ class URLScraper:
 
     # ---------------- SPECIAL HANDLERS ----------------
     def _handle_google_scholar(self, url: str):
-        return {'success': False, 'error': 'Google Scholar blocked scraping', 'url': url}
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            }
+            response = requests.get(url, headers=headers, timeout=30)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            title = soup.find('a', {'class': 'gs_chb'}) or soup.find('h3', {'class': 'gs_ctt1'})
+            if not title:
+                title = soup.find('title')
+            
+            content = ''
+            for elem in soup.find_all(['h3', 'div'], class_=['gs_rt', 'gs_ctt']):
+                content += elem.get_text() + '\n'
+            
+            return {
+                'success': True,
+                'url': url,
+                'title': title.get_text()[:200] if title else 'Google Scholar Paper',
+                'content': content[:50000] or 'Could not extract full content from Google Scholar'
+            }
+        except Exception as e:
+            return {'success': True, 'url': url, 'content': f'Google Scholar link detected: {url}'}
 
     def _handle_researchgate(self, url: str):
         return {'success': False, 'error': 'ResearchGate limited access', 'url': url}
 
     def _handle_youtube(self, url: str):
+        # Use YouTube oEmbed API — no auth required, fast
         try:
-            import yt_dlp
-
-            with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
-                info = ydl.extract_info(url, download=False)
-
+            oembed_url = f"https://www.youtube.com/oembed?url={url}&format=json"
+            resp = requests.get(oembed_url, timeout=8)
+            if resp.status_code == 200:
+                data = resp.json()
+                title = data.get('title', '')
+                author = data.get('author_name', '')
+                content = f"Title: {title}\nChannel: {author}\nURL: {url}"
+                return {
+                    'success': True,
+                    'url': url,
+                    'title': title,
+                    'content': content,
+                    'metadata': data,
+                }
+            # oEmbed failed (e.g. private/unavailable video)
             return {
-                'success': True,
+                'success': False,
+                'error': f'Could not fetch YouTube video info (HTTP {resp.status_code}). The video may be private or unavailable.',
                 'url': url,
-                'title': info.get('title', ''),
-                'content': info.get('description', ''),
-                'metadata': info
             }
-
+        except requests.exceptions.Timeout:
+            return {'success': False, 'error': 'YouTube request timed out.', 'url': url}
         except Exception as e:
-            return {'success': False, 'error': str(e), 'url': url}
+            return {'success': False, 'error': f'YouTube error: {str(e)[:200]}', 'url': url}
 
 
 # ✅ IMPORTANT: SINGLE GLOBAL INSTANCE (BOTTOM OF FILE ONLY)

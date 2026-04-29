@@ -16,7 +16,7 @@ SECRET_KEY = os.getenv(
 )
 
 # DEBUG = False # ALWAYS FALSE on Render
-DEBUG = False
+DEBUG = True  # Enable for local development
 ALLOWED_HOSTS = [
     "research-nraq.onrender.com",
     ".onrender.com",
@@ -26,7 +26,10 @@ ALLOWED_HOSTS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://research-nraq.onrender.com",]
+    "https://research-nraq.onrender.com",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
 
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -131,7 +134,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ======================
 # MEDIA

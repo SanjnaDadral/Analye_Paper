@@ -1,206 +1,301 @@
-{% extends 'analyzer/base.html' %} {% load static %} {% block title %}Verify OTP
-- PaperAIzer{% endblock %} {% block content %}
-<div
-  class="container"
-  style="
-    min-height: 100vh;
+{% extends 'analyzer/base.html' %}
+{% load static %}
+
+{% block title %}Verify OTP - PaperAIzer{% endblock %}
+
+{% block extra_css %}
+<style>
+  .otp-wrapper {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    align-items: center;
+    background: radial-gradient(circle at top right, rgba(99,102,241,0.06), transparent),
+                radial-gradient(circle at bottom left, rgba(236,72,153,0.04), transparent);
+  }
+
+  .otp-card {
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 10px 50px rgba(99,102,241,0.15);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+  }
+
+  .otp-icon-wrap {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1.25rem;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem 0;
-  "
->
-  <div
-    class="card"
-    style="
-      width: 100%;
-      max-width: 450px;
-      border-radius: 15px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    "
-  >
-    <div class="card-body p-5">
-      <div style="text-align: center; margin-bottom: 2rem">
-        <div
-          style="
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(
-              135deg,
-              var(--primary),
-              var(--secondary)
-            );
-            border-radius: 50%;
-            color: white;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-          "
-        >
-          <i class="fas fa-shield-alt"></i>
+    box-shadow: 0 8px 20px rgba(99,102,241,0.3);
+  }
+
+  .otp-input-wrap {
+    display: flex;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .otp-input-wrap:focus-within {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.12);
+  }
+
+  .otp-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0.85rem 1rem;
+    font-size: 1.6rem;
+    letter-spacing: 0.6rem;
+    text-align: center;
+    font-weight: 700;
+    color: #0f172a;
+    background: transparent;
+  }
+
+  .otp-input::placeholder {
+    color: #cbd5e1;
+    letter-spacing: 0.4rem;
+    font-size: 1.2rem;
+    font-weight: 400;
+  }
+
+  .otp-eye-btn {
+    background: #f8fafc;
+    border: none;
+    border-left: 2px solid #e2e8f0;
+    padding: 0 1rem;
+    cursor: pointer;
+    color: #94a3b8;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+  }
+
+  .otp-eye-btn:hover {
+    background: #f1f5f9;
+    color: #6366f1;
+  }
+
+  .otp-submit-btn {
+    width: 100%;
+    padding: 0.9rem;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(99,102,241,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .otp-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(99,102,241,0.4);
+  }
+
+  .otp-submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .otp-alert {
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .otp-alert.success {
+    background: rgba(34,197,94,0.08);
+    border: 1px solid rgba(34,197,94,0.3);
+    color: #15803d;
+  }
+
+  .otp-alert.error {
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #b91c1c;
+  }
+
+  .otp-dev-hint {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.83rem;
+    color: #92400e;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .otp-divider {
+    border-top: 1px solid #f1f5f9;
+    margin: 1.25rem 0;
+  }
+
+  .otp-footer-link {
+    color: #6366f1;
+    text-decoration: none;
+    font-weight: 600;
+    transition: opacity 0.2s;
+  }
+
+  .otp-footer-link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="otp-wrapper py-4">
+  <div class="container">
+    <div class="otp-card">
+
+      <!-- Icon + heading -->
+      <div class="text-center mb-4">
+        <div class="otp-icon-wrap">
+          <i class="fas fa-shield-halved" style="color:white; font-size:1.6rem;"></i>
         </div>
-        <h1 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem">
+        <h1 style="font-size:1.75rem; font-weight:800; color:#0f172a; margin-bottom:0.4rem;">
           Verify OTP
         </h1>
-        <p style="color: var(--text-secondary)">
+        <p style="color:#64748b; font-size:0.93rem; margin-bottom:0.35rem;">
           Enter the 6-digit code sent to your email
         </p>
-        <p
-          style="
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-          "
-        >
-          <strong>{{ email }}</strong>
-        </p>
+        {% if email %}
+        <span style="color:#6366f1; font-weight:600; font-size:0.9rem;">
+          <i class="fas fa-envelope me-1"></i>{{ email }}
+        </span>
+        {% endif %}
       </div>
 
-      {% if messages %} {% for message in messages %} {% if message.tags == 'success' %}
-      <div
-        class="alert alert-success"
-        style="border-radius: 10px; margin-bottom: 1.5rem"
-      >
-        <i class="fas fa-check-circle me-2"></i>{{ message }}
-      </div>
-      {% else %}
-      <div
-        class="alert alert-danger"
-        style="border-radius: 10px; margin-bottom: 1.5rem"
-      >
-        <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
-      </div>
-      {% endif %} 
-      {% endfor %} 
+      <!-- Django messages -->
+      {% if messages %}
+        {% for message in messages %}
+        <div class="otp-alert {% if message.tags == 'success' %}success{% else %}error{% endif %}">
+          <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+          <span>{{ message }}</span>
+        </div>
+        {% endfor %}
       {% endif %}
 
-      <form method="post" style="margin-bottom: 2rem">
+      <!-- Dev hint (localhost only) -->
+      <div class="otp-dev-hint" id="devHint">
+        <i class="fas fa-terminal me-2"></i>
+        <strong>Local Dev:</strong> The OTP was printed to the server console / terminal window.
+      </div>
+
+      <!-- OTP Form -->
+      <form method="post" id="otpForm" novalidate>
         {% csrf_token %}
 
         <div class="mb-3">
-          <label
-            for="otp"
-            class="form-label"
-            style="font-weight: 600; margin-bottom: 0.5rem"
-            >One-Time Password (OTP)</label
-          >
-          <input
-            type="text"
-            class="form-control"
-            id="otp"
-            name="otp"
-            placeholder="000000"
-            maxlength="6"
-            inputmode="numeric"
-            pattern="[0-9]{6}"
-            required
-            style="
-              padding: 0.75rem 1rem;
-              border: 1px solid var(--border-color);
-              border-radius: 8px;
-              background: var(--bg-secondary);
-              font-size: 1.5rem;
-              letter-spacing: 0.5rem;
-              text-align: center;
-              font-weight: 600;
-            "
-          />
+          <label for="otp" style="font-weight:600; color:#334155; font-size:0.88rem; display:block; margin-bottom:0.5rem;">
+            One-Time Password (OTP)
+          </label>
+          <div class="otp-input-wrap">
+            <input
+              type="text"
+              id="otp"
+              name="otp"
+              class="otp-input"
+              placeholder="• • • • • •"
+              maxlength="6"
+              inputmode="numeric"
+              pattern="[0-9]{6}"
+              autocomplete="one-time-code"
+              required
+            >
+            <button type="button" class="otp-eye-btn" id="toggleOtpBtn" title="Show/hide code">
+              <i class="fas fa-eye" id="toggleOtpIcon"></i>
+            </button>
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8; margin-top:0.45rem;">
+            <i class="fas fa-clock me-1"></i>Expires in 10 minutes
+          </div>
         </div>
 
-        <div
-          style="
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-          "
-        >
-          <i class="fas fa-info-circle me-1"></i>OTP expires in 10 minutes
-        </div>
-
-        <button
-          type="submit"
-          class="btn-primary-custom"
-          style="width: 100%; margin-bottom: 1rem"
-        >
-          <i class="fas fa-check me-2"></i>Verify OTP
+        <button type="submit" class="otp-submit-btn" id="verifyBtn">
+          <i class="fas fa-check"></i>
+          Verify OTP
         </button>
       </form>
 
-      <div
-        style="
-          text-align: center;
-          border-top: 1px solid var(--border-color);
-          padding-top: 1.5rem;
-        "
-      >
-        <p style="margin-bottom: 0.5rem; color: var(--text-secondary)">
-          Didn't receive the OTP?
-        </p>
-        <p style="margin-bottom: 0; color: var(--text-secondary)">
-          <a
-            href="{% url 'forgot_password' %}"
-            style="
-              color: var(--primary);
-              text-decoration: none;
-              font-weight: 600;
-            "
-            >Try again</a
-          >
-          or
-          <a
-            href="{% url 'login' %}"
-            style="
-              color: var(--primary);
-              text-decoration: none;
-              font-weight: 600;
-            "
-            >Back to Login</a
-          >
-        </p>
+      <div class="otp-divider"></div>
+
+      <div class="text-center" style="font-size:0.9rem; color:#64748b;">
+        Didn't receive it?
+        <a href="{% url 'forgot_password' %}" class="otp-footer-link ms-1">Resend OTP</a>
+        &nbsp;&middot;&nbsp;
+        <a href="{% url 'login' %}" class="otp-footer-link">Back to Login</a>
       </div>
+
     </div>
   </div>
 </div>
+{% endblock %}
 
-<style>
-  .alert {
-    padding: 1rem;
-    border: none;
-    border-radius: 10px;
-  }
-
-  .alert-success {
-    background: rgba(34, 197, 94, 0.1);
-    color: #22c55e;
-  }
-
-  .alert-danger {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-  }
-
-  /* OTP input styling */
-  #otp {
-    font-kerning: auto;
-    -webkit-text-security: disc;
-  }
-
-  #otp:focus {
-    border-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-  }
-</style>
-
+{% block extra_js %}
 <script>
-  // Auto-focus first digit and only allow numbers
-  document.getElementById("otp").addEventListener("input", function (e) {
-    let value = e.target.value.replace(/[^0-9]/g, "");
-    if (value.length > 6) {
-      value = value.slice(0, 6);
+  // Show dev hint only on localhost / 127.0.0.1
+  (function () {
+    var h = window.location.hostname;
+    if (h === 'localhost' || h === '127.0.0.1') {
+      document.getElementById('devHint').style.display = 'block';
     }
-    e.target.value = value;
+  })();
+
+  // Restrict input to digits only
+  document.getElementById('otp').addEventListener('input', function () {
+    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+  });
+
+  // Show / hide the OTP digits
+  document.getElementById('toggleOtpBtn').addEventListener('click', function () {
+    var inp  = document.getElementById('otp');
+    var icon = document.getElementById('toggleOtpIcon');
+    if (inp.type === 'text') {
+      inp.type = 'password';
+      icon.className = 'fas fa-eye';
+    } else {
+      inp.type = 'text';
+      icon.className = 'fas fa-eye-slash';
+    }
+  });
+
+  // Validate then disable button
+  document.getElementById('otpForm').addEventListener('submit', function (e) {
+    var otp = document.getElementById('otp').value.trim();
+    if (!/^\d{6}$/.test(otp)) {
+      e.preventDefault();
+      alert('Please enter the full 6-digit OTP code.');
+      return;
+    }
+    var btn = document.getElementById('verifyBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying…';
   });
 </script>
 {% endblock %}

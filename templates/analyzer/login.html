@@ -1,284 +1,110 @@
-```html
-<!doctype html>
+{% extends 'analyzer/base.html' %}
 {% load static %}
-<html lang="en">
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - PaperAIzer</title>
+{% block title %}Login - PaperAIzer{% endblock %}
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
-
-  <!-- ✅ FIXED Font Awesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-
-  <style>
-    :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --secondary: #ec4899;
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #ede9fe 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1rem;
-    }
-
-    .login-container {
-      width: 100%;
-      max-width: 420px;
-    }
-
-    .login-card {
-      background: white;
-      border-radius: 20px;
-      padding: 2.5rem;
-      box-shadow: 0 10px 40px rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.1);
-    }
-
-    .login-header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 1.75rem;
-      font-weight: 700;
-      font-family: 'Sora', sans-serif;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 0.5rem;
-    }
-
-    .brand i {
-      font-size: 2rem;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .login-header h2 {
-      font-size: 1.5rem;
-      color: #1e293b;
-      margin-bottom: 0.5rem;
-    }
-
-    .login-header p {
-      color: #64748b;
-      font-size: 0.9rem;
-    }
-
-    .form-group {
-      margin-bottom: 1.25rem;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: #334155;
-      font-size: 0.9rem;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 0.875rem 1rem;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      transition: all 0.2s;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    .form-group input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-    }
-
-    .btn-login {
-      width: 100%;
-      padding: 0.875rem;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 1rem;
-    }
-
-    .btn-login:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
-    }
-
-    .alert {
-      padding: 0.875rem 1rem;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .alert-error {
-      background: #fef2f2;
-      color: #991b1b;
-      border: 1px solid #fecaca;
-    }
-
-    .field-error {
-      color: red;
-      font-size: 0.8rem;
-      margin-top: 5px;
-    }
-
-    .input-icon {
-      position: relative;
-    }
-
-    .input-icon i {
-      position: absolute;
-      left: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #94a3b8;
-    }
-
-    .input-icon input {
-      padding-left: 2.75rem;
-    }
-
-    .forgot-link {
-      display: block;
-      text-align: right;
-      margin-bottom: 1.5rem;
-      color: var(--primary);
-      font-size: 0.85rem;
-      text-decoration: none;
-    }
-
-    .forgot-link:hover {
-      text-decoration: underline;
-    }
-
-    .divider {
-      display: flex;
-      align-items: center;
-      margin: 1.5rem 0;
-      color: #94a3b8;
-      font-size: 0.85rem;
-    }
-
-    .divider::before,
-    .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: #e2e8f0;
-    }
-
-    .divider span {
-      padding: 0 1rem;
-    }
-
-    .register-link {
-      text-align: center;
-      color: #64748b;
-      font-size: 0.9rem;
-    }
-
-    .register-link a {
-      color: var(--primary);
-      font-weight: 600;
-      text-decoration: none;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="login-container">
-    <div class="login-card">
-
-      <div class="login-header">
-        <div class="brand">
-          <i class="fas fa-brain"></i> PaperAI<span style="font-weight:800;">zer</span>
-        </div>
-        <h2>Welcome back</h2>
-        <p>Sign in to analyze your research papers</p>
-      </div>
-
-      <!-- ✅ FIXED ERROR BLOCK -->
-      {% if form.non_field_errors %}
-      <div class="alert alert-error">
-        <i class="fas fa-exclamation-circle"></i>
-        {{ form.non_field_errors.0 }}
-      </div>
-      {% endif %}
-
-      <form method="post">
-        {% csrf_token %}
-
-        <div class="form-group">
-          <label>Email or Username</label>
-          <div class="input-icon">
-            <i class="fas fa-envelope"></i>
-            <input type="text" name="username" required>
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card border-0" style="border-radius: 20px; background: #ffffff; box-shadow: 0 10px 40px rgba(99,102,241,0.15);">
+        <div class="card-body p-4">
+          <div class="text-center mb-4">
+            <div class="brand-icon-wrapper mb-3" style="width: 60px; height: 60px; margin: 0 auto; background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-brain" style="color: white; font-size: 1.5rem;"></i>
+            </div>
+            <h1 style="font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">
+              Welcome back
+            </h1>
+            <p style="color: #64748b; font-size: 0.95rem;">Sign in to analyze your research papers</p>
           </div>
-          {% if form.username.errors %}
-          <div class="field-error">{{ form.username.errors.0 }}</div>
-          {% endif %}
-        </div>
 
-        <div class="form-group">
-          <label>Password</label>
-          <div class="input-icon">
-            <i class="fas fa-lock"></i>
-            <input type="password" name="password" required>
+          {% if form.non_field_errors %}
+          <div class="alert mb-3" style="border-radius: 10px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #dc2626;">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ form.non_field_errors.0 }}
           </div>
-          {% if form.password.errors %}
-          <div class="field-error">{{ form.password.errors.0 }}</div>
           {% endif %}
+          
+          {% if messages %}
+          {% for message in messages %}
+          <div class="alert mb-3" style="border-radius: 10px;{% if message.tags == 'success' %} background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #16a34a;{% else %} background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #dc2626;{% endif %}">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} me-2"></i>{{ message }}
+          </div>
+          {% endfor %}
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label for="{{ form.email.id_for_label }}" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">Email Address</label>
+              <div class="input-group">
+                <span class="input-group-text" style="background: #f8fafc; border: 2px solid #e2e8f0; border-right: none; border-radius: 10px 0 0 10px; color: #94a3b8;">
+                  <i class="fas fa-envelope"></i>
+                </span>
+                <input type="text" class="form-control" id="{{ form.email.id_for_label }}" name="{{ form.email.html_name }}" placeholder="Enter your email" required style="border: 2px solid #e2e8f0; border-left: none; border-radius: 0 10px 10px 0; padding: 0.75rem 1rem; background: #ffffff; color: #0f172a;">
+              </div>
+              {% if form.email.errors %}
+              <small class="text-danger mt-1 d-block">{{ form.email.errors.0 }}</small>
+              {% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label for="{{ form.password.id_for_label }}" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">Password</label>
+              <div class="input-group">
+                <span class="input-group-text" style="background: #f8fafc; border: 2px solid #e2e8f0; border-right: none; border-radius: 10px 0 0 10px; color: #94a3b8;">
+                  <i class="fas fa-lock"></i>
+                </span>
+                <input type="password" class="form-control" id="{{ form.password.id_for_label }}" name="{{ form.password.html_name }}" placeholder="Enter your password" required style="border: 2px solid #e2e8f0; border-left: none; border-radius: 0 10px 10px 0; padding: 0.75rem 1rem; background: #ffffff; color: #0f172a;">
+              </div>
+              {% if form.password.errors %}
+              <small class="text-danger mt-1 d-block">{{ form.password.errors.0 }}</small>
+              {% endif %}
+            </div>
+
+            <div class="text-end mb-4">
+              <a href="{% url 'forgot_password' %}" style="color: #6366f1; text-decoration: none; font-size: 0.85rem; font-weight: 600;">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn-primary-custom w-100 py-3" style="background: linear-gradient(135deg, #6366f1, #ec4899); border: none; border-radius: 10px; font-weight: 600; color: white; cursor: pointer;">
+              <i class="fas fa-sign-in-alt me-2"></i>Sign In
+            </button>
+          </form>
+
+          <div class="text-center mt-4 pt-3" style="border-top: 1px solid #e2e8f0;">
+            <p style="margin-bottom: 0; color: #64748b; font-size: 0.9rem;">
+              Don't have an account?
+              <a href="{% url 'register' %}" style="color: #6366f1; text-decoration: none; font-weight: 600;">Create one</a>
+            </p>
+          </div>
         </div>
-
-        <a href="{% url 'forgot_password' %}" class="forgot-link">Forgot password?</a>
-
-        <button type="submit" class="btn-login">
-          <i class="fas fa-sign-in-alt"></i> Sign In
-        </button>
-      </form>
-
-      <div class="divider"><span>or</span></div>
-      <p class="register-link">Don't have an account? <a href="{% url 'register' %}">Create one</a></p>
-
+      </div>
     </div>
   </div>
-</body>
+</div>
 
-</html>
-```
+<style>
+  .form-control::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  .form-control:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+    outline: none;
+  }
+
+  .btn-primary-custom {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+  }
+</style>
+{% endblock %}

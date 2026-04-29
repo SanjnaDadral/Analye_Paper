@@ -798,6 +798,7 @@ class MLProcessor:
         return cleaned_urls[:50]
 
     def extract_references(self, text: str) -> List[str]:
+        import re  # Import at the top of the function
         references = []
         ref_section = ""
        
@@ -814,7 +815,6 @@ class MLProcessor:
        
         # Improve reference extraction by merging lines that likely belong to the same reference
         if ref_section:
-            import re
             # Try to identify where new references start (e.g., [1], 1., or Author Name)
             raw_lines = ref_section.split('\n')
             current_ref = ""

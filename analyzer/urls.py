@@ -23,5 +23,9 @@ urlpatterns = [
     path('export/<int:document_id>/<str:export_format>/', views.export_document, name='export'),
     path('email/<int:document_id>/', views.email_report, name='email_report'),
     path('feedback/<int:document_id>/', views.submit_feedback, name='feedback'),
+    path('notes/<int:document_id>/save/', views.save_notes, name='save_notes'),
+    path('notes/<int:document_id>/add_tag/', views.add_tag, name='add_tag'),
+    path('notes/<int:document_id>/remove_tag/', views.remove_tag, name='remove_tag'),
+    path('notes/<int:document_id>/similar/', views.similar_papers, name='similar_papers'),
     path('health/', views.health_check, name='health'),
 ]

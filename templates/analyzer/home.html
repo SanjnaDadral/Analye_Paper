@@ -14,6 +14,8 @@
   }
 
   @media (prefers-color-scheme: dark) {
+    .hero-title { color: var(--text-primary); }
+    .feature-title, .step-title { background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f0abfc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .hero-subtitle { color: var(--text-secondary) !important; }
     .hero-badge { border-color: var(--border-color) !important; color: #818cf8 !important; }
     .feature-card { background: var(--bg-card); border-color: var(--border-color); }
@@ -21,7 +23,14 @@
     .feature-card p { color: var(--text-secondary); }
     .step-card { background: var(--bg-card); border-color: var(--border-color); }
     .section-title { color: var(--text-primary); }
+    .section-label, .trust-badge, .section-description { color: var(--text-secondary); }
   }
+
+  .hero-badge, .trust-badge, .section-label { color: #6366f1 !important; }
+  .hero-subtitle, .section-description { color: #475569 !important; }
+  .section-title { color: #0f172a !important; }
+  .feature-title, .step-title, .testimonial-text, .author-name { color: #0f172a !important; }
+  .feature-description, .step-description, .author-title { color: #475569 !important; }
 
   /* ========== HERO SECTION ========== */
   .hero-section {
@@ -42,6 +51,7 @@
         rgba(99, 102, 241, 0.15) 0%,
         transparent 70%);
     border-radius: 50%;
+    filter: blur(80px);
   }
 
   .hero-section::after {
@@ -55,6 +65,7 @@
         rgba(236, 72, 153, 0.1) 0%,
         transparent 70%);
     border-radius: 50%;
+    filter: blur(60px);
   }
 
   .hero-container {
@@ -92,14 +103,20 @@
   .hero-title {
     font-size: 3.5rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    color: transparent !important;
     margin-bottom: 1.5rem;
     line-height: 1.2;
     animation: fadeInDown 0.8s ease;
     text-align: left;
+  }
+
+  .hero-illustration-img {
+    max-width: 100%;
+    height: auto;
   }
 
   .hero-subtitle {
@@ -108,7 +125,6 @@
     margin-bottom: 2.5rem;
     line-height: 1.8;
     animation: fadeInUp 0.8s ease 0.2s backwards;
-    text-align: left;
   }
 
   .hero-buttons {
@@ -190,11 +206,115 @@
 
   .hero-illustration {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .hero-illustration-img {
-    max-width: 100%;
-    height: auto;
+  /* ── Animated hero card ── */
+  .hero-card {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.18);
+    animation: floatCard 4s ease-in-out infinite;
+    color: white;
+    font-family: 'Sora', sans-serif;
+  }
+  @keyframes floatCard {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-12px); }
+  }
+  .hero-card-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 1rem;
+  }
+  .hero-card-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+  }
+  .hero-card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0.9;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .hero-card-stats {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .hero-stat {
+    background: rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+  }
+  .hero-stat-val {
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .hero-stat-label {
+    font-size: 0.7rem;
+    opacity: 0.75;
+    margin-top: 0.25rem;
+    font-weight: 500;
+  }
+  .hero-card-bar-label {
+    font-size: 0.75rem;
+    opacity: 0.75;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+  }
+  .hero-card-bar-wrap {
+    background: rgba(255,255,255,0.15);
+    border-radius: 100px;
+    height: 8px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+  .hero-card-bar-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #a5f3fc, #818cf8, #f0abfc);
+    border-radius: 100px;
+    animation: fillBar 2.5s ease forwards 0.8s;
+  }
+  @keyframes fillBar {
+    to { width: 87%; }
+  }
+  .hero-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+  .hero-tag {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+  .hero-card-done {
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   @keyframes fadeInDown {
@@ -300,10 +420,7 @@
 
   .features-section .section-title,
   .how-it-works .section-title {
-    background: linear-gradient(135deg, #6366f1 0%, #0f172a 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #1e293b;
     text-align: center !important;
     justify-content: center !important;
     width: 100% !important;
@@ -499,7 +616,10 @@
   .feature-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #0f172a;
+    background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 0.75rem;
     min-height: 1.5em;
   }
@@ -596,7 +716,10 @@
   .step-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #0f172a;
+    background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 0.75rem;
   }
 
@@ -853,8 +976,8 @@
       <div class="hero-badge">
         <i class="fas fa-wand-magic-sparkles"></i> AI-Powered Analysis
       </div>
-      <h1 class="hero-title">
-        Analyze Research Papers <span>Like Never Before</span>
+      <h1 class="hero-title" style="background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent !important;">
+        Analyze Research Papers Like Never Before
       </h1>
       <p class="hero-subtitle">
         Harness advanced AI to extract deep insights, detect semantic
@@ -870,8 +993,7 @@
       </div>
     </div>
     <div class="hero-illustration">
-      <img src="{% static 'images/ai_ml_illustration.png' %}?v=5" alt="AI Paper Analysis"
-        class="hero-illustration-img" />
+      <img src="{% static 'images/ai_ml_illustration.png' %}" alt="Paper Analysis" class="hero-illustration-img">
     </div>
   </div>
 </section>
@@ -888,7 +1010,7 @@
     <span class="section-label">
       <i class="fas fa-check-circle me-2"></i>What You Get
     </span>
-    <h2 class="section-title">Powerful Analysis Features</h2>
+    <h2 class="section-title" style="background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">Powerful Analysis Features</h2>
     <p class="section-description">
       Every analysis includes comprehensive insights powered by AI.
     </p>
@@ -960,7 +1082,7 @@
 <section class="how-it-works" id="how-it-works">
   <div class="section-header">
     <span class="section-label"><i class="fas fa-cogs me-2"></i>Process</span>
-    <h2 class="section-title">How It Works</h2>
+    <h2 class="section-title" style="background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">How It Works</h2>
     <p class="section-description">
       A simple, powerful 4-step process to analyze any research paper.
     </p>
@@ -1008,7 +1130,7 @@
 <section class="result-preview-section">
   <div class="section-header">
     <span class="section-label"><i class="fas fa-magnifying-glass me-2"></i>Preview</span>
-    <h2 class="section-title">See Your Results in Real-Time</h2>
+    <h2 class="section-title" style="background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">See Your Results in Real-Time</h2>
   </div>
   <div class="preview-container">
     <div class="preview-header">
@@ -1065,7 +1187,7 @@
 <section class="testimonials-section">
   <div class="section-header">
     <span class="section-label"><i class="fas fa-quote-left me-2"></i>Testimonials</span>
-    <h2 class="section-title">Loved by Researchers & Students</h2>
+    <h2 class="section-title" style="background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">Loved by Researchers & Students</h2>
   </div>
   <div class="testimonials-grid">
     <div class="testimonial-card">

@@ -7,6 +7,7 @@ class Document(models.Model):
         ('pdf', 'PDF File'),
         ('text', 'Raw Text'),
         ('url', 'URL'),
+        ('image', 'Image'),
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='documents')
@@ -16,6 +17,8 @@ class Document(models.Model):
     file = models.FileField(upload_to='uploads/', null=True, blank=True)
     url = models.URLField(max_length=2000, null=True, blank=True)
     word_count = models.IntegerField(default=0)
+    notes = models.TextField(blank=True, default='')
+    tags = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -28,7 +31,7 @@ class Document(models.Model):
         return self.title or f"{self.get_input_type_display()} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
     
     def get_input_type_display_class(self):
-        icons = {'pdf': 'fa-file-pdf', 'text': 'fa-file-alt', 'url': 'fa-globe'}
+        icons = {'pdf': 'fa-file-pdf', 'text': 'fa-file-alt', 'url': 'fa-globe', 'image': 'fa-image'}
         return icons.get(self.input_type, 'fa-file')
 
 

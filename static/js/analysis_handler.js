@@ -190,6 +190,13 @@ class AnalysisHandler {
       formData.append("text_content", this.textInput?.value?.trim() || "");
     } else if (inputType === "url") {
       formData.append("url_input", this.urlInput?.value?.trim() || "");
+    } else if (inputType === "bulk") {
+      const bulkInput = document.getElementById("bulkFiles");
+      if (bulkInput && bulkInput.files.length > 0) {
+        for (let i = 0; i < bulkInput.files.length; i++) {
+          formData.append("bulk_files", bulkInput.files[i]);
+        }
+      }
     }
 
     await this.submitAnalysis(formData);
@@ -211,6 +218,16 @@ class AnalysisHandler {
       const url = this.urlInput?.value?.trim() || "";
       if (!url.startsWith("http")) {
         this.showError("❌ Please enter a valid URL (starting with http)");
+        return false;
+      }
+    } else if (inputType === "bulk") {
+      const bulkInput = document.getElementById("bulkFiles");
+      if (!bulkInput || bulkInput.files.length === 0) {
+        this.showError("❌ Please select at least one PDF file for bulk upload");
+        return false;
+      }
+      if (bulkInput.files.length > 10) {
+        this.showError("❌ Maximum 10 files allowed for bulk upload");
         return false;
       }
     }

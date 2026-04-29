@@ -344,10 +344,8 @@
       <span><i
           class="fas fa-{% if document.input_type == 'pdf' %}file-pdf{% elif document.input_type == 'text' %}file-alt{% else %}globe{% endif %}"></i>
         {{ document.get_input_type_display }}</span>
-      <span><i class="fas fa-calendar"></i> {{ document.created_at|date:"F d, Y"
-        }}</span>
-      {% if analysis.publication_year %}<span><i class="fas fa-calendar-alt"></i> {{ analysis.publication_year
-        }}</span>{% endif %}
+      <span><i class="fas fa-calendar"></i> {{ document.created_at|date:"F d, Y" }}</span>
+      {% if analysis.publication_year %}<span><i class="fas fa-calendar-alt"></i> {{ analysis.publication_year }}</span>{% endif %}
       {% if analysis.word_count %}<span><i class="fas fa-font"></i> {{ analysis.word_count }} words</span>{% endif %}
     </div>
     <div class="result-actions">
@@ -507,6 +505,60 @@
         <p style="line-height: 1.8">{{ analysis.summary }}</p>
       </div>
       {% endif %}
+
+      <!-- Personal Notes Section -->
+      <div class="section-card" style="border-left: 4px solid #f59e0b; background: #fffbeb;">
+        <h5 class="section-title">
+          <i class="fas fa-sticky-note"></i> My Notes
+          <button type="button" class="btn btn-sm btn-warning ms-2" onclick="toggleNotesEdit()">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+        </h5>
+        
+        <div id="notesDisplay" style="line-height: 1.7;">{{ document.notes|default:"No notes yet. Click Edit to add notes."|linebreaks }}</div>
+        
+        <div id="notesEdit" style="display: none;">
+          <textarea id="notesTextarea" class="form-control" rows="5" placeholder="Add your personal notes here...">{{ document.notes }}</textarea>
+          <div class="d-flex gap-2 mt-2">
+            <button type="button" class="btn btn-primary btn-sm" onclick="saveNotes()">
+              <i class="fas fa-save me-1"></i> Save Notes
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleNotesEdit()">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tags Section -->
+      <div class="section-card" style="border-left: 4px solid #8b5cf6;">
+        <h5 class="section-title">
+          <i class="fas fa-tags"></i> Tags
+        </h5>
+        
+        <div id="tagsDisplay" class="d-flex flex-wrap gap-2 mb-2">
+          {% if document.tags %}
+            {% for tag in document.tags %}
+              <span class="badge" style="background: #8b5cf6; color: white; padding: 0.4rem 0.75rem; border-radius: 20px;">
+                {{ tag }}
+              </span>
+            {% endfor %}
+          {% else %}
+            <span class="text-muted">No tags yet.</span>
+          {% endif %}
+        </div>
+        
+        <div id="tagsEdit">
+          <div class="d-flex gap-2 mb-2">
+            <input type="text" id="newTagInput" class="form-control" placeholder="Add new tag..." style="max-width: 200px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addTag()">
+              <i class="fas fa-plus"></i> Add
+            </button>
+          </div>
+          <div id="tagsMessage" class="small"></div>
+        </div>
+      </div>
+
       {% with conclusion=analysis.extras.conclusion %}
       {% if conclusion %}
       <div class="section-card">
@@ -573,13 +625,13 @@
         </h5>
         <div class="extracted-image-grid">
           {% for img in extracted_images %}
-          <div class="extracted-image-card" onclick="window.open('{{ img.url }}', '_blank')">
-            <img src="{{ img.url }}" alt="Page {{ img.page }}" onerror="
+          <div class="extracted-image-card" onclick="window.open('{{ img }}', '_blank')">
+            <img src="{{ img }}" alt="Extracted Graphic" onerror="
                 this.src =
                   'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f1f5f9%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2212%22>Image</text></svg>'
               " />
             <div class="image-info">
-              <i class="fas fa-file-pdf me-1"></i> Page {{ img.page }}
+              <i class="fas fa-file-image me-1"></i> Detected Graphic
             </div>
           </div>
           {% endfor %}
@@ -590,62 +642,7 @@
     </div>
 
     <div class="col-lg-4">
-      <!-- Quick Compare Section -->
-      <div class="section-card"
-        style="border-top: 4px solid #ec4899; background: linear-gradient(135deg, #fff5f7 0%, #ffffff 100%);">
-        <h5 class="section-title"><i class="fas fa-exchange-alt"></i> Compare & Analyze More</h5>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#compareText"
-            style="font-size: 0.85rem;">
-            <i class="fas fa-plus me-1"></i>Compare Text
-          </button>
-          <button class="btn btn-sm btn-outline-success" data-bs-toggle="collapse" data-bs-target="#compareUrl"
-            style="font-size: 0.85rem;">
-            <i class="fas fa-plus me-1"></i>Add URL/Video
-          </button>
-        </div>
 
-        <!-- Compare Text Collapse -->
-        <div class="collapse mt-3" id="compareText">
-          <div style="background: white; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <label style="font-weight: 600; font-size: 0.9rem; color: #64748b; display: block; margin-bottom: 0.5rem;">
-              Paste text to compare:
-            </label>
-            <textarea id="compareTextArea" class="form-control" rows="5"
-              placeholder="Paste another paper or document text here..."
-              style="font-size: 0.85rem; border: 1px solid #cbd5e1;"></textarea>
-            <button type="button" class="btn btn-primary btn-sm mt-2 w-100" onclick="compareWithText()"
-              style="font-size: 0.85rem;">
-              <i class="fas fa-check me-1"></i>Compare Text
-            </button>
-          </div>
-        </div>
-
-        <!-- Compare URL Collapse -->
-        <div class="collapse mt-3" id="compareUrl">
-          <div style="background: white; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <label style="font-weight: 600; font-size: 0.9rem; color: #64748b; display: block; margin-bottom: 0.5rem;">
-              Paste URL or YouTube link:
-            </label>
-            <input type="url" id="compareUrlInput" class="form-control"
-              placeholder="https://arxiv.org/abs/... or https://youtu.be/..."
-              style="font-size: 0.85rem; border: 1px solid #cbd5e1; margin-bottom: 0.75rem;" />
-            <button type="button" class="btn btn-success btn-sm w-100" onclick="compareWithUrl()"
-              style="font-size: 0.85rem;">
-              <i class="fas fa-check me-1"></i>Fetch & Compare
-            </button>
-            <small style="color: #94a3b8; display: block; margin-top: 0.5rem;">
-              Supports: arXiv, ResearchGate, YouTube, academic websites
-            </small>
-          </div>
-        </div>
-
-        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-          <a href="{% url 'home' %}" class="btn btn-sm btn-outline-secondary w-100">
-            <i class="fas fa-upload me-1"></i>New Analysis
-          </a>
-        </div>
-      </div>
 
       {% if analysis.technologies %}
       <div class="section-card">
@@ -917,9 +914,15 @@
       headers: {
         'X-CSRFToken': '{{ csrf_token }}',
         'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest',
       },
     })
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok && r.status !== 200) {
+          return r.text().then(text => { throw new Error('Server error ' + r.status + ': ' + text.substring(0, 200)); });
+        }
+        return r.json();
+      })
       .then(data => {
         if (data.success) {
           window.location.href = '{% url "library" %}';
@@ -927,14 +930,14 @@
           alert(data.error || 'Delete failed');
           deleteInProgress = false;
           btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-trash me-2"></i>Delete';
+          btn.innerHTML = '<i class="fas fa-trash me-1"></i>Delete';
         }
       })
       .catch(err => {
         alert('Error: ' + err.message);
         deleteInProgress = false;
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-trash me-2"></i>Delete';
+        btn.innerHTML = '<i class="fas fa-trash me-1"></i>Delete';
       });
   }
 
@@ -1072,5 +1075,138 @@
       if (width) bar.style.width = width + '%';
     });
   });
-</script>
-{% endblock %}
+
+  // Notes Functions
+  function toggleNotesEdit() {
+    const display = document.getElementById('notesDisplay');
+    const edit = document.getElementById('notesEdit');
+    if (edit.style.display === 'none') {
+      display.style.display = 'none';
+      edit.style.display = 'block';
+    } else {
+      display.style.display = 'block';
+      edit.style.display = 'none';
+    }
+  }
+
+  function saveNotes() {
+    const notes = document.getElementById('notesTextarea').value;
+    const formData = new FormData();
+    formData.append('notes', notes);
+
+    fetch('{% url "save_notes" document.id %}', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('notesDisplay').innerHTML = notes || 'No notes yet. Click Edit to add notes.';
+        toggleNotesEdit();
+        alert('Notes saved!');
+      } else {
+        alert('Error: ' + (data.error || 'Failed'));
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Error saving notes');
+    });
+  }
+
+  // Tags Functions
+  function addTag() {
+    const newTag = document.getElementById('newTagInput').value.trim();
+    if (!newTag) return;
+
+    const formData = new FormData();
+    formData.append('tag', newTag);
+
+    fetch('{% url "add_tag" document.id %}', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) location.reload();
+      else alert(data.error || 'Error');
+    });
+  }
+
+  function removeTag(tag) {
+    if (!confirm('Remove tag "' + tag + '"?')) return;
+
+    const formData = new FormData();
+    formData.append('tag', tag);
+
+    fetch('{% url "remove_tag" document.id %}', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      }
+    });
+  }
+
+  function findSimilarPapers() {
+    document.getElementById('similarLoading').style.display = 'block';
+    document.getElementById('similarResults').style.display = 'none';
+
+    fetch('{% url "similar_papers" document.id %}', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('similarLoading').style.display = 'none';
+      
+      if (data.success && data.similar && data.similar.length > 0) {
+        let html = '<div class="row g-3">';
+        data.similar.forEach(doc => {
+          html += `
+            <div class="col-md-6">
+              <a href="/result/${doc.id}/" class="text-decoration-none">
+                <div class="card" style="border-left: 3px solid #10b981;">
+                  <h6 class="mb-1">${doc.title}</h6>
+                  <small class="text-muted">${doc.match_count} matching keywords</small>
+                  <div class="mt-1">
+                    ${doc.keywords.slice(0,3).map(k => `<span class="badge bg-light text-dark">${k}</span>`).join(' ')}
+                  </div>
+                </div>
+              </a>
+            </div>
+          `;
+        });
+        html += '</div>';
+        document.getElementById('similarResults').innerHTML = html;
+        document.getElementById('similarResults').style.display = 'block';
+      } else {
+        document.getElementById('similarResults').innerHTML = '<p class="text-muted">No similar papers found in your library.</p>';
+        document.getElementById('similarResults').style.display = 'block';
+      }
+    })
+    .catch(err => {
+      document.getElementById('similarLoading').style.display = 'none';
+      document.getElementById('similarResults').innerHTML = '<p class="text-danger">Error finding similar papers.</p>';
+      document.getElementById('similarResults').style.display = 'block';
+    });
+  }
+</script>{% endblock %}
