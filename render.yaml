@@ -2,22 +2,51 @@ services:
   - type: web
     name: paper-analyzer
     env: python
+    region: oregon
+    plan: free
     buildCommand: "./build.sh"
-    startCommand: "gunicorn paper_analyzer.wsgi:application --workers 1 --timeout 120 --max-requests 1000"
+    startCommand: "gunicorn paper_analyzer.wsgi:application --workers 1 --timeout 120 --max-requests 1000 --bind 0.0.0.0:$PORT"
     envVars:
       - key: PYTHON_VERSION
-        value: 3.13
+        value: "3.12.7"
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_HOSTS
         value: ".onrender.com"
+      - key: RENDER_EXTERNAL_HOSTNAME
+        fromService:
+          type: web
+          name: paper-analyzer
+          property: host
       - key: DATABASE_URL
         fromDatabase:
           name: paper-analyzer-db
           property: connectionString
       - key: GROQ_API_KEY
+        sync: false
+      - key: PDF_MAX_PAGES
+        value: "25"
+      - key: PDF_PREFER_FAST
+        value: "True"
+      - key: ANALYSIS_TEXT_CAP
+        value: "5000"
+      - key: MAX_PDF_UPLOAD_MB
+        value: "45"
+      - key: MAX_STORE_PDF_MB
+        value: "16"
+      - key: ENABLE_HEAVY_ML
+        value: "False"
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
         sync: false
 
 databases:

@@ -16,17 +16,19 @@ SECRET_KEY = os.getenv(
 )
 
 # DEBUG = False # ALWAYS FALSE on Render
-DEBUG = True  # Enable for local development
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+
+_render_host = os.getenv('RENDER_EXTERNAL_HOSTNAME', '')
 ALLOWED_HOSTS = [
-    "research-nraq.onrender.com",
     ".onrender.com",
     "localhost",
     "127.0.0.1",
-
 ]
+if _render_host:
+    ALLOWED_HOSTS.append(_render_host)
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://research-nraq.onrender.com",
+    "https://*.onrender.com",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
