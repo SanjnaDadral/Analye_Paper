@@ -30,6 +30,7 @@
     width:300px;height:300px;
     background:rgba(255,255,255,0.1);
     border-radius:50%;filter:blur(50px);
+    pointer-events: none;
   }
   .welcome-avatar {
     width:72px;height:72px;
@@ -127,8 +128,8 @@
   <div class="container pb-5">
 
     <!-- ── Header ── -->
-    <div class="dashboard-header">
-      <div class="d-flex align-items-center gap-3 mb-3">
+    <div class="dashboard-header" style="position: relative;">
+      <div class="d-flex align-items-center gap-3 mb-3" style="position: relative; z-index: 2;">
         <div class="welcome-avatar flex-shrink-0">
           {% if profile.avatar %}
             <img src="{{ profile.avatar.url }}" alt="avatar">
@@ -144,7 +145,7 @@
           </div>
         </div>
       </div>
-      <div class="d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
+      <div class="d-grid gap-2" style="grid-template-columns: 1fr 1fr; position: relative; z-index: 2;">
         <a href="{% url 'profile' %}" class="btn btn-light btn-sm rounded-pill fw-600 text-center">
           <i class="fas fa-user-edit me-1 text-primary"></i>Edit Profile
         </a>
