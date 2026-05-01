@@ -1483,4 +1483,152 @@ html { scroll-behavior: smooth; }
   outline-offset: 2px;
 }
 
+/* ============ RESULT PAGE MOBILE ============ */
+@media (max-width: 768px) {
+  /* Result header actions wrap and stack */
+  .result-header .result-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .result-header .result-actions .btn,
+  .result-header .result-actions .dropdown {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: 0;
+  }
+  .result-header .result-actions .btn {
+    justify-content: center;
+    text-align: center;
+  }
+  /* Result meta pills wrap */
+  .result-meta { gap: 0.5rem; }
+  .result-meta span { font-size: 0.8rem; padding: 0.4rem 0.75rem; }
+  /* Result title smaller */
+  .result-title { font-size: 1.3rem !important; }
+  /* Q&A input stacks */
+  .qa-input-row { flex-direction: column !important; }
+  .qa-input-row .btn { width: 100%; }
+  /* Stat grid 2 cols */
+  .stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  /* Extracted images 2 cols */
+  .extracted-image-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  /* Section card padding */
+  .section-card { padding: 1rem !important; }
+  /* Feedback rating wraps */
+  .feedback-rating { flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+  /* Result actions full width on very small screens */
+  .result-header .result-actions .btn,
+  .result-header .result-actions .dropdown {
+    flex: 1 1 100%;
+  }
+  .result-header .result-actions .dropdown .btn {
+    width: 100%;
+  }
+  /* Stat grid single col */
+  .stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  /* Extracted images 2 cols */
+  .extracted-image-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ============ HOME PAGE MOBILE ============ */
+@media (max-width: 768px) {
+  .hero-container { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+  .hero-title { font-size: 2rem !important; text-align: center !important; }
+  .hero-subtitle { text-align: center !important; font-size: 1rem !important; }
+  .hero-content { text-align: center !important; }
+  .hero-buttons { justify-content: center !important; flex-direction: column !important; align-items: center !important; }
+  .btn-primary-hero, .btn-secondary-hero { width: 100% !important; max-width: 320px !important; }
+  .features-grid { grid-template-columns: 1fr !important; }
+  .steps-grid { grid-template-columns: 1fr 1fr !important; }
+  .step-card::after { display: none !important; }
+  .testimonials-grid { grid-template-columns: 1fr !important; }
+  .preview-row { grid-template-columns: 1fr !important; }
+  .section-title { font-size: 1.75rem !important; }
+  .hero-section { padding: 2.5rem 1rem !important; }
+  .upload-section, .features-section, .how-it-works,
+  .testimonials-section, .result-preview-section { padding: 2.5rem 1rem !important; }
+  .trust-badge { flex-direction: column; text-align: center; padding: 0.75rem 1rem; }
+}
+
+@media (max-width: 480px) {
+  .hero-title { font-size: 1.7rem !important; }
+  .steps-grid { grid-template-columns: 1fr !important; }
+  .hero-card { max-width: 100% !important; }
+  .hero-card-stats { grid-template-columns: repeat(3, 1fr) !important; }
+  .preview-stats { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ============ UPLOAD PAGE MOBILE ============ */
+@media (max-width: 576px) {
+  .upload-zone { padding: 2rem 1rem !important; }
+  .upload-zone h5 { font-size: 1rem !important; }
+  .method-tab { padding: 0.75rem 1rem !important; font-size: 0.9rem !important; }
+  .btn-analyze { padding: 0.875rem 1.5rem !important; font-size: 1rem !important; }
+  .four-boxes-animation { gap: 0.5rem !important; padding: 1rem !important; }
+  .box { width: 65px !important; height: 65px !important; }
+  .box i { font-size: 1.2rem !important; }
+  .box span { font-size: 0.65rem !important; }
+}
+
+/* ============ LIBRARY PAGE MOBILE ============ */
+@media (max-width: 768px) {
+  .library-header { padding: 1.25rem !important; }
+  .library-header h2 { font-size: 1.3rem !important; }
+  /* Filter buttons wrap */
+  .filter-btn { padding: 0.4rem 0.75rem !important; font-size: 0.8rem !important; }
+  /* Doc cards full width */
+  .doc-card { padding: 1rem !important; }
+  .doc-title { font-size: 0.9rem !important; }
+}
+
+/* ============ COMPARE PAGE MOBILE ============ */
+@media (max-width: 768px) {
+  .compare-header { padding: 1.25rem !important; }
+  .compare-header h1 { font-size: 1.3rem !important; }
+  /* Paper selects stack */
+  .compare-card-body .row { flex-direction: column; }
+  /* Similarity stats 2x2 grid */
+  .stat-highlight .value { font-size: 1.5rem !important; }
+  /* Common elements stack */
+  .compare-card-body .col-md-4,
+  .compare-card-body .col-md-6 { margin-bottom: 0.75rem; }
+  /* Paper title in header truncates */
+  #title1, #title2 { font-size: 0.85rem !important; max-width: 150px; }
+}
+
+/* ============ AUTH PAGES MOBILE ============ */
+@media (max-width: 480px) {
+  .auth-container { padding: 0.75rem !important; align-items: flex-start; padding-top: 2rem !important; }
+  .auth-card { padding: 1.25rem !important; }
+  .auth-header h2 { font-size: 1.3rem !important; }
+}
+
+/* ============ BULK RESULTS PAGE MOBILE ============ */
+@media (max-width: 576px) {
+  .bulk-header { padding: 1.25rem !important; }
+  .bulk-header h1 { font-size: 1.3rem !important; }
+  .result-card { padding: 1rem !important; }
+  .result-actions { flex-direction: column; }
+  .result-actions .btn { width: 100%; }
+}
+
+/* ============ MODAL MOBILE ============ */
+@media (max-width: 576px) {
+  .modal-dialog { margin: 0.5rem !important; }
+  .modal-content { border-radius: 16px !important; }
+  .modal-body { padding: 1rem !important; }
+  .modal-footer { padding: 0.75rem 1rem !important; flex-wrap: wrap; gap: 0.5rem; }
+  .modal-footer .btn { flex: 1; }
+}
+
+/* ============ FOOTER MOBILE ============ */
+@media (max-width: 768px) {
+  .footer { padding: 1.5rem 0 1rem !important; }
+  .footer-brand { margin-bottom: 0.75rem; }
+  .footer .col-md-2, .footer .col-md-4 { margin-bottom: 1.25rem; }
+  .footer-bottom { margin-top: 1rem !important; padding-top: 1rem !important; }
+}
+
 /* ============ DARK MODE COMPLETELY REMOVED ============ */

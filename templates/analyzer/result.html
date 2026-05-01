@@ -22,6 +22,30 @@
     .result-title {
       font-size: 1.4rem;
     }
+    .qa-input-row {
+      flex-direction: column;
+    }
+    .qa-input-row .btn {
+      width: 100%;
+    }
+    .result-actions {
+      flex-wrap: wrap;
+    }
+    .result-actions .btn,
+    .result-actions .dropdown {
+      flex: 1 1 calc(50% - 0.375rem);
+      min-width: 0;
+    }
+    .result-actions .btn {
+      justify-content: center;
+    }
+  }
+  @media (max-width: 480px) {
+    .result-actions .btn,
+    .result-actions .dropdown {
+      flex: 1 1 100%;
+    }
+    .result-actions .dropdown .btn { width: 100%; }
   }
 
   .result-meta {
@@ -438,11 +462,11 @@
         <h5 class="section-title"><i class="fas fa-question-circle"></i> Ask Questions About This Paper</h5>
         <p class="text-muted small mb-3">Ask anything about this paper and get AI-powered answers:</p>
 
-        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+        <div class="d-flex gap-2 mb-3 qa-input-row">
           <input type="text" id="qaQuestion" class="form-control"
             placeholder="e.g., What methodology was used? What are the main findings?"
             style="border: 1px solid #cbd5e1;" />
-          <button type="button" class="btn btn-primary" onclick="askQuestion()" style="white-space: nowrap;">
+          <button type="button" class="btn btn-primary" onclick="askQuestion()" style="white-space: nowrap; flex-shrink: 0;">
             <i class="fas fa-paper-plane me-1"></i>Ask
           </button>
         </div>

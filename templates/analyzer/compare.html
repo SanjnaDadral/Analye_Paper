@@ -178,13 +178,23 @@ Papers - PaperAIzer{% endblock %} {% block extra_css %}
     color: #9ca3af;
   }
 
-
-</style>
+  @media (max-width: 768px) {
+    .compare-header { padding: 1.25rem !important; }
+    .compare-header h1 { font-size: 1.3rem !important; }
+    .stat-highlight .value { font-size: 1.5rem !important; }
+    #title1, #title2 { font-size: 0.82rem !important; }
+  }
+  @media (max-width: 576px) {
+    .compare-card-body { padding: 1rem !important; }
+    .compare-card-header { padding: 1rem !important; font-size: 0.9rem; }
+    .paper-badge { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+    .btn-compare { padding: 0.75rem 1rem !important; font-size: 0.95rem; }
+  }</style>
 {% endblock %} {% block content %}
 <div class="container">
   <div class="compare-header">
-    <div class="row align-items-center">
-      <div class="col-md-8">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div>
         <h1 class="mb-2">
           <i class="fas fa-exchange-alt me-2"></i>Compare Papers
         </h1>
@@ -193,9 +203,7 @@ Papers - PaperAIzer{% endblock %} {% block extra_css %}
           methodology, and more.
         </p>
       </div>
-      <div class="col-md-4 text-end">
-        <a href="{% url 'library' %}" class="btn btn-light"><i class="fas fa-folder-open me-2"></i>View Library</a>
-      </div>
+      <a href="{% url 'library' %}" class="btn btn-light flex-shrink-0"><i class="fas fa-folder-open me-2"></i>View Library</a>
     </div>
   </div>
 
