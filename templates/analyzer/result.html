@@ -6,69 +6,65 @@
   .result-header {
     background: linear-gradient(135deg, #6366f1, #ec4899);
     color: white;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 16px;
     margin-bottom: 2rem;
   }
 
   .result-title {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     line-height: 1.3;
-  }
-
-  @media (max-width: 768px) {
-    .result-title {
-      font-size: 1.4rem;
-    }
-    .qa-input-row {
-      flex-direction: column;
-    }
-    .qa-input-row .btn {
-      width: 100%;
-    }
-    .result-actions {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.5rem;
-    }
-    .result-actions .btn,
-    .result-actions .dropdown {
-      width: 100%;
-    }
-    .result-actions .dropdown .btn {
-      width: 100%;
-    }
-  }
-  @media (max-width: 480px) {
-    .result-actions {
-      grid-template-columns: repeat(2, 1fr);
-    }
+    word-break: break-word;
   }
 
   .result-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.6rem;
     align-items: center;
   }
 
   .result-meta span {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     background: rgba(255, 255, 255, 0.15);
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.8rem;
     border-radius: 20px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
   }
 
   .result-actions {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+  }
+
+  .result-actions .btn,
+  .result-actions .dropdown,
+  .result-actions .dropdown .btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    .result-title { font-size: 1.25rem; }
+    .result-meta span { font-size: 0.78rem; padding: 0.35rem 0.65rem; }
+    .result-actions { grid-template-columns: repeat(2, 1fr); }
+    .qa-input-row { flex-direction: column; }
+    .qa-input-row .btn { width: 100%; }
+  }
+
+  @media (max-width: 480px) {
+    .result-header { padding: 1rem; }
+    .result-title { font-size: 1.1rem; }
+    .result-meta { gap: 0.4rem; }
+    .result-meta span { font-size: 0.72rem; padding: 0.3rem 0.55rem; }
   }
 
   .section-card {
@@ -372,19 +368,20 @@
       {% if analysis.word_count %}<span><i class="fas fa-font"></i> {{ analysis.word_count }} words</span>{% endif %}
     </div>
     <div class="result-actions">
-      {% if analysis.model_used %}<span class="badge bg-info me-2" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">
+      {% if analysis.model_used %}
+      <span class="badge bg-info" style="font-size: 0.75rem; padding: 0.4rem 0.8rem; align-self: center;">
         <i class="fas fa-brain me-1"></i>{{ analysis.model_used }}
-      </span>{% endif %}
+      </span>
+      {% endif %}
       {% if document.is_batch or "batch" in document.title|lower %}
-      <span class="badge bg-warning text-dark me-2" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">
-        <i class="fas fa-layer-group me-1"></i>Batch Mode Enabled
+      <span class="badge bg-warning text-dark" style="font-size: 0.75rem; padding: 0.4rem 0.8rem; align-self: center;">
+        <i class="fas fa-layer-group me-1"></i>Batch Mode
       </span>
       {% endif %}
 
-      <!-- Export dropdown with format selector -->
-      <div class="dropdown d-inline-block">
-        <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-          <i class="fas fa-download me-1"></i> Export
+      <div class="dropdown">
+        <button class="btn btn-light dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+          <i class="fas fa-download me-1"></i>Export
         </button>
         <ul class="dropdown-menu">
           <li><h6 class="dropdown-header">Download with Citation</h6></li>
