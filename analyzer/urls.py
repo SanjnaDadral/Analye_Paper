@@ -16,6 +16,7 @@ urlpatterns = [
     path('reset-password/', views.reset_password, name='reset_password'),
     path('analyze/', views.analyze_document, name='analyze_document'),
     path('result/<int:document_id>/', views.result_detail, name='result'),
+    path('bulk-results/', views.bulk_results, name='bulk_results'),
     path('ask/<int:document_id>/', views.ask_question, name='ask_question'),
     path('compare/papers/<int:doc1_id>/<int:doc2_id>/', views.compare_papers, name='compare_papers'),
     path('library/', views.library, name='library'),

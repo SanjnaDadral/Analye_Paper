@@ -532,11 +532,12 @@ def analyze_document(request):
             
             logger.info(f"Bulk processing completed: {len(document_ids)} documents for user {request.user.id}")
             
+            ids_str = ','.join(str(i) for i in document_ids)
             return JsonResponse({
                 'success': True,
-                'message': f'Analysis of {len(document_ids)} papers complete! Redirecting to first result...',
-                'document_id': document_ids[0],
-                'redirect_url': f'/result/{document_ids[0]}/'
+                'message': f'Analysis of {len(document_ids)} paper{"s" if len(document_ids) > 1 else ""} complete!',
+                'document_ids': document_ids,
+                'redirect_url': f'/bulk-results/?ids={ids_str}'
             })
 
 
@@ -1043,6 +1044,23 @@ def reset_password(request):
     
     context = {'email': email}
     return render(request, 'analyzer/reset_password.html', context)
+
+
+@login_required
+def bulk_results(request):
+    """Show results for all documents from a bulk upload session."""
+    ids_param = request.GET.get('ids', '')
+    if not ids_param:
+        return redirect('library')
+    try:
+        doc_ids = [int(i) for i in ids_param.split(',') if i.strip().isdigit()]
+    except ValueError:
+        return redirect('library')
+    documents = Document.objects.filter(id__in=doc_ids, user=request.user).prefetch_related('analysis')
+    # Preserve original order
+    doc_map = {d.id: d for d in documents}
+    ordered = [doc_map[i] for i in doc_ids if i in doc_map]
+    return render(request, 'analyzer/bulk_results.html', {'documents': ordered})
 
 
 @login_required
