@@ -1434,9 +1434,10 @@ html, body { overflow-x: hidden; }
   .method-tabs { flex-direction: column; }
   .method-tab { min-width: unset; }
 
-  /* Buttons full width on mobile */
-  .result-actions { flex-direction: column; }
-  .result-actions .btn { width: 100%; justify-content: center; }
+  /* Buttons 2-col grid on mobile for result actions */
+  .result-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+  .result-actions .btn, .result-actions .dropdown { width: 100%; }
+  .result-actions .dropdown .btn { width: 100%; }
 
   /* Footer columns */
   .footer .row > div { margin-bottom: 1.5rem; }
@@ -1485,19 +1486,18 @@ html { scroll-behavior: smooth; }
 
 /* ============ RESULT PAGE MOBILE ============ */
 @media (max-width: 768px) {
-  /* Result header actions wrap and stack */
+  /* Result header actions 2-col grid */
   .result-header .result-actions {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
   .result-header .result-actions .btn,
   .result-header .result-actions .dropdown {
-    flex: 1 1 calc(50% - 0.25rem);
-    min-width: 0;
+    width: 100%;
   }
-  .result-header .result-actions .btn {
-    justify-content: center;
-    text-align: center;
+  .result-header .result-actions .dropdown .btn {
+    width: 100%;
   }
   /* Result meta pills wrap */
   .result-meta { gap: 0.5rem; }
@@ -1518,14 +1518,6 @@ html { scroll-behavior: smooth; }
 }
 
 @media (max-width: 480px) {
-  /* Result actions full width on very small screens */
-  .result-header .result-actions .btn,
-  .result-header .result-actions .dropdown {
-    flex: 1 1 100%;
-  }
-  .result-header .result-actions .dropdown .btn {
-    width: 100%;
-  }
   /* Stat grid single col */
   .stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
   /* Extracted images 2 cols */
