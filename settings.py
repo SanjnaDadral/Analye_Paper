@@ -36,6 +36,16 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
 # ======================
+# SESSION CONFIGURATION
+# ======================
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 2592000  # 30 days in seconds
+SESSION_SAVE_EVERY_REQUEST = False  # Only save on change to improve performance
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+
+# ======================
 # APPS
 # ======================
 INSTALLED_APPS = [
@@ -91,12 +101,31 @@ WSGI_APPLICATION = 'paper_analyzer.wsgi.application'
 # ======================
 # DATABASE
 # ======================
+import sys
+
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600
+        conn_max_age=600,
     )
 }
+
+# Add connection health checks if available
+if 'DATABASES' in locals():
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+    DATABASES['default']['ATOMIC_REQUESTS'] = False
+
+# ⚠️ IMPORTANT: SQLite is NOT suitable for production (Render free tier wipes files)
+# If in production and using SQLite, data will be lost on container restart!
+if not DEBUG and 'sqlite' in DATABASES['default']['ENGINE']:
+    import warnings
+    warnings.warn(
+        "⚠️  CRITICAL: Using SQLite in production on Render! "
+        "Data will be wiped on container restart. "
+        "Ensure DATABASE_URL is set to a PostgreSQL service.",
+        RuntimeWarning
+    )
+    print("⚠️  CRITICAL: SQLite detected in production mode!", file=sys.stderr)
 
 # ======================
 # AUTH
