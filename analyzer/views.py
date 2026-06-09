@@ -42,7 +42,21 @@ MAX_PDF_STORE_BYTES = int(os.getenv("MAX_STORE_PDF_MB", "16")) * 1024 * 1024
 
 
 # =========================
-# 🔥 GROQ AI FUNCTION
+# � CSRF ERROR HANDLER
+# =========================
+def csrf_failure(request, reason=""):
+    """Handle CSRF verification failures gracefully"""
+    logger.warning(f"CSRF failure: {reason} | Origin: {request.META.get('HTTP_ORIGIN', 'unknown')}")
+    
+    return JsonResponse({
+        'success': False,
+        'error': 'Security token verification failed. Please refresh the page and try again.',
+        'debug_info': f"Reason: {reason}" if settings.DEBUG else None
+    }, status=403)
+
+
+# =========================
+# �🔥 GROQ AI FUNCTION
 # =========================
 # def analyze_text_with_groq(text):
 #     client = Groq(api_key=settings.GROQ_API_KEY)

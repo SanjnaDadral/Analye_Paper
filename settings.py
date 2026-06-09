@@ -25,15 +25,24 @@ ALLOWED_HOSTS = [
 
 ]
 
+# CSRF Configuration
 CSRF_TRUSTED_ORIGINS = [
-    "https://research-nraq.onrender.com",]
+    "https://research-nraq.onrender.com",
+    "https://*.onrender.com",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
 
-
+# Allow CSRF from any subdomain on production
+# and handle Render's proxy headers correctly
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = False  # Render handles HTTPS; never redirect locally
 
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+# Session and CSRF security (always secure in production)
+SESSION_COOKIE_SECURE = True  # Always secure for production
+CSRF_COOKIE_SECURE = True      # Always secure for production
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
 
 # ======================
 # SESSION CONFIGURATION
@@ -258,3 +267,8 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 # ======================
 FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
+
+# ======================
+# CSRF ERROR HANDLING
+# ======================
+CSRF_FAILURE_VIEW = 'analyzer.views.csrf_failure'
